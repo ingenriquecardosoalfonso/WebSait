@@ -133,9 +133,10 @@ export default function App() {
               border: `0.5px solid ${isDark ? "#2A2A35" : "#8B7340"}`,
               width: isCollapsed ? "36px" : "fit-content",
               height: "36px",
-              padding: isCollapsed ? "4px" : "4px 14px 4px 4px",
+              padding: isCollapsed ? "4px" : isDark ? "4px 14px 4px 4px" : "4px 4px 4px 14px",
               gap: "10px",
               flexDirection: isDark ? "row" : "row-reverse",
+              justifyContent: "center",
             }}
           >
             <div
