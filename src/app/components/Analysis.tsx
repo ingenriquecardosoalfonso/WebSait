@@ -96,13 +96,18 @@ export default function Analysis() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-800">Comparative Analysis</h1>
-        <p className="text-gray-600 mt-2">Comparison between normal and malicious traffic</p>
+        <h1 className="text-2xl font-semibold tracking-wide text-foreground">Comparative Analysis</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Comparison between normal and malicious traffic</p>
       </div>
       
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-green-50 border border-green-200 p-6 rounded-lg">
+        <div className="bg-white/60 dark:bg-gray-800/60 
+      backdrop-blur-sm 
+      border border-gray-200 dark:border-gray-600 
+      rounded-lg p-5 
+      hover:border-blue-400 dark:hover:border-blue-500 
+      transition-colors">
           <h3 className="text-lg font-semibold text-green-800 mb-2">Normal Traffic</h3>
           <div className="space-y-1 text-sm text-green-700">
             <p><span className="font-medium">Samples:</span> {normalData.length}</p>
@@ -111,7 +116,12 @@ export default function Analysis() {
           </div>
         </div>
         
-        <div className="bg-red-50 border border-red-200 p-6 rounded-lg">
+        <div className="bg-white/60 dark:bg-gray-800/60 
+      backdrop-blur-sm 
+      border border-gray-200 dark:border-gray-600 
+      rounded-lg p-5 
+      hover:border-blue-400 dark:hover:border-blue-500 
+      transition-colors">
           <h3 className="text-lg font-semibold text-red-800 mb-2">Malicious Traffic</h3>
           <div className="space-y-1 text-sm text-red-700">
             <p><span className="font-medium">Samples:</span> {attackData.length}</p>
@@ -124,13 +134,18 @@ export default function Analysis() {
       {/* Comparison Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Duration Comparison */}
-        <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
-          <h2 className="text-xl font-semibold mb-4 text-gray-800">Flow Duration</h2>
+        <div className="bg-white/60 dark:bg-gray-800/60 
+      backdrop-blur-sm 
+      border border-gray-200 dark:border-gray-600 
+      rounded-lg p-5 
+      hover:border-blue-400 dark:hover:border-blue-500 
+      transition-colors">
+          <h2 className="text-xl font-semibold mb-4 text-white-800">Flow Duration</h2>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={durationComparison}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
               <XAxis dataKey="category" stroke="#6b7280" />
-              <YAxis stroke="#6b7280" label={{ value: 'Seconds', angle: -90, position: 'insideLeft', fill: '#6b7280' }} />
+              <YAxis stroke="#eff4ffe8" label={{ value: 'Seconds', angle: -90, position: 'insideLeft', fill: '#fdfeff' }} />
               <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', color: '#1f2937' }} />
               <Bar dataKey="avgDuration" name="Average Duration (s)">
                 {durationComparison.map((entry, index) => (
@@ -142,14 +157,19 @@ export default function Analysis() {
         </div>
         
         {/* Packets per Second Comparison */}
-        <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
-          <h2 className="text-xl font-semibold mb-4 text-gray-800">Packet Rate</h2>
+        <div className="bg-white/60 dark:bg-gray-800/60 
+      backdrop-blur-sm 
+      border border-gray-200 dark:border-gray-600 
+      rounded-lg p-5 
+      hover:border-blue-400 dark:hover:border-blue-500 
+      transition-colors">
+          <h2 className="text-xl font-semibold mb-4 text-white-800">Packet Rate</h2>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={pktsComparison}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="category" stroke="#6b7280" />
-              <YAxis stroke="#6b7280" label={{ value: 'Packets/s', angle: -90, position: 'insideLeft', fill: '#6b7280' }} />
-              <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', color: '#1f2937' }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#f5f9f7" />
+              <XAxis dataKey="category" stroke="#78847b" />
+              <YAxis stroke="#f2f9f2" width={80}  label={{ value: 'Packets/s', angle: -90, position: 'insideLeft', fill: '#f1f3f7' }} />
+              <Tooltip contentStyle={{ backgroundColor: '#ebefeb', border: '1px solid #e7ece4', borderRadius: '8px', color: '#291f44' }} />
               <Bar dataKey="avgPkts" name="Average Packets/s">
                 {pktsComparison.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index]} />
@@ -160,13 +180,18 @@ export default function Analysis() {
         </div>
         
         {/* TCP Flags Comparison */}
-        <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
-          <h2 className="text-xl font-semibold mb-4 text-gray-800">TCP Flags Patterns</h2>
+        <div className="bg-white/60 dark:bg-gray-800/60 
+      backdrop-blur-sm 
+      border border-gray-200 dark:border-gray-600 
+      rounded-lg p-5 
+      hover:border-blue-400 dark:hover:border-blue-500 
+      transition-colors">
+          <h2 className="text-xl font-semibold mb-4 text-white-800">TCP Flags Patterns</h2>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={flagsComparison}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
               <XAxis dataKey="flag" stroke="#6b7280" />
-              <YAxis stroke="#6b7280" />
+              <YAxis stroke="#6b7280" width={70}  label={{ value: 'Count', angle: -90, position: 'insideLeft', fill: '#e7e9ed' }}  />
               <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', color: '#1f2937' }} />
               <Legend wrapperStyle={{ color: '#1f2937' }} />
               <Bar dataKey="Normal" fill="#10b981" />
@@ -176,13 +201,18 @@ export default function Analysis() {
         </div>
         
         {/* Down/Up Ratio */}
-        <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
-          <h2 className="text-xl font-semibold mb-4 text-gray-800">Down/Up Ratio</h2>
+        <div className="bg-white/60 dark:bg-gray-800/60 
+      backdrop-blur-sm 
+      border border-gray-200 dark:border-gray-600 
+      rounded-lg p-5 
+      hover:border-blue-400 dark:hover:border-blue-500 
+      transition-colors">
+          <h2 className="text-xl font-semibold mb-4 text-white-800">Down/Up Ratio</h2>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={ratioComparison}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
               <XAxis dataKey="category" stroke="#6b7280" />
-              <YAxis stroke="#6b7280" label={{ value: 'Ratio', angle: -90, position: 'insideLeft', fill: '#6b7280' }} />
+              <YAxis stroke="#6b7280" label={{ value: 'Ratio', angle: -90, position: 'insideLeft', fill: '#f5f7fb' }} />
               <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', color: '#1f2937' }} />
               <Bar dataKey="avgRatio" name="Down/Up Ratio">
                 {ratioComparison.map((entry, index) => (
@@ -197,13 +227,18 @@ export default function Analysis() {
       {/* Large Charts */}
       <div className="space-y-6">
         {/* Scatter Plot */}
-        <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
-          <h2 className="text-xl font-semibold mb-4 text-gray-800">Packets vs Duration (Colored by Type)</h2>
+        <div className="bg-white/60 dark:bg-gray-800/60 
+      backdrop-blur-sm 
+      border border-gray-200 dark:border-gray-600 
+      rounded-lg p-5 
+      hover:border-blue-400 dark:hover:border-blue-500 
+      transition-colors">
+          <h2 className="text-xl font-semibold mb-4 text-white-800">Packets vs Duration (Colored by Type)</h2>
           <ResponsiveContainer width="100%" height={400}>
             <ScatterChart>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="duration" name="Duration" unit="s" stroke="#6b7280" label={{ value: 'Duration (s)', position: 'insideBottom', offset: -5, fill: '#6b7280' }} />
-              <YAxis dataKey="packets" name="Packets" stroke="#6b7280" label={{ value: 'Total Packets', angle: -90, position: 'insideLeft', fill: '#6b7280' }} />
+              <XAxis dataKey="duration" name="Duration" unit="s" stroke="#6b7280" height={50} label={{ value: 'Duration (s)', position: 'insideBottom', offset: -5, fill: '#ebeef3' }} />
+              <YAxis dataKey="packets" name="Packets" stroke="#6b7280" width={80} label={{ value: 'Total Packets', angle: -90, position: 'insideLeft', fill: '#f5f7fb' }} />
               <Tooltip cursor={{ strokeDasharray: '3 3' }} content={({ payload }) => {
                 if (payload && payload.length > 0) {
                   const data = payload[0].payload as any;
@@ -225,13 +260,18 @@ export default function Analysis() {
         </div>
         
         {/* Payload Comparison */}
-        <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
-          <h2 className="text-xl font-semibold mb-4 text-gray-800">Payload Bytes per Second</h2>
+        <div className="bg-white/60 dark:bg-gray-800/60 
+      backdrop-blur-sm 
+      border border-gray-200 dark:border-gray-600 
+      rounded-lg p-5 
+      hover:border-blue-400 dark:hover:border-blue-500 
+      transition-colors">
+          <h2 className="text-xl font-semibold mb-4 text-white-800">Payload Bytes per Second</h2>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={payloadComparison}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
               <XAxis dataKey="category" stroke="#6b7280" />
-              <YAxis stroke="#6b7280" label={{ value: 'Bytes/s', angle: -90, position: 'insideLeft', fill: '#6b7280' }} />
+              <YAxis stroke="#6b7280" width={80} label={{ value: 'Bytes/s', angle: -90, position: 'insideLeft', fill: '#f7f8fb' }} />
               <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', color: '#1f2937' }} />
               <Bar dataKey="avgPayload" name="Average Payload (Bytes/s)">
                 {payloadComparison.map((entry, index) => (
@@ -244,4 +284,4 @@ export default function Analysis() {
       </div>
     </div>
   );
-}
+} /* This is Analysis component that provides a comprehensive comparative analysis between normal and malicious network traffic using various charts and metrics. It includes summary cards, bar charts for different features, and a scatter plot to visualize the relationship between packets and duration. The data is generated using a mock dataset for demonstration purposes. */
