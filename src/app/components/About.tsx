@@ -52,7 +52,7 @@ export default function About() {
       rounded-lg p-5 
       hover:border-blue-400 dark:hover:border-blue-500 
       transition-colors">
-              <h3 className="font-semibold text-lg text-blue-700 dark:text-blue-400 mb-2">🤖 Random Forest</h3>
+              <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">🤖 Random Forest</h3>
               <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
                 Ensemble learning method for robust attack classification with high accuracy and low false positives.
               </p>
@@ -64,7 +64,7 @@ export default function About() {
       rounded-lg p-5 
       hover:border-blue-400 dark:hover:border-blue-500 
       transition-colors">
-              <h3 className="font-semibold text-lg text-blue-700 dark:text-blue-400 mb-2">🧠 Neural Networks</h3>
+              <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">🧠 Neural Networks</h3>
               <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
                 Deep learning models that identify complex patterns in network traffic for advanced threat detection.
               </p>
@@ -76,7 +76,7 @@ export default function About() {
       rounded-lg p-5 
       hover:border-blue-400 dark:hover:border-blue-500 
       transition-colors">
-              <h3 className="font-semibold text-lg text-blue-700 dark:text-blue-400 mb-2">📊 Gradient Boosting</h3>
+              <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">📊 Gradient Boosting</h3>
               <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
                 Powerful ensemble technique that combines weak learners to create highly accurate predictions.
               </p>
@@ -88,7 +88,7 @@ export default function About() {
       rounded-lg p-5 
       hover:border-blue-400 dark:hover:border-blue-500 
       transition-colors">
-              <h3 className="font-semibold text-lg text-blue-700 dark:text-blue-400 mb-2">🎯 SVM (Support Vector Machine)</h3>
+              <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">🎯 SVM (Support Vector Machine)</h3>
               <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
                 Effective classification algorithm for separating normal traffic from attack patterns.
               </p>
@@ -104,7 +104,7 @@ export default function About() {
             <div className="flex items-start gap-3">
               <Lightbulb className="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" />
               <div>
-                <h4 className="font-semibold text-lg text-blue-700 dark:text-blue-400 mb-2">Continuous Learning</h4>
+                <h4 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">Continuous Learning</h4>
                 <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
                   Our AI models are continuously updated with new threat patterns and attack vectors, 
                   ensuring they stay ahead of emerging cybersecurity challenges.
@@ -124,7 +124,7 @@ export default function About() {
       transition-colors">
         <div className="flex items-center gap-3 mb-6">
           <Eye className="w-8 h-8 text-green-600" />
-          <h2 className="font-semibold text-lg text-blue-700 dark:text-blue-400 mb-2">Transparency & Metrics</h2>
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">Transparency & Metrics</h2>
         </div>
         
         <div className="space-y-4">
@@ -157,7 +157,7 @@ export default function About() {
           </div>
 
           <div className="mt-6 space-y-3">
-            <h3 className="font-semibold text-lg text-blue-700 dark:text-blue-400 mb-2">
+            <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">
               <CheckCircle className="w-5 h-5 text-green-600" />
               What We Track & Display:
             </h3>
@@ -214,7 +214,7 @@ export default function About() {
       rounded-lg p-5 
       hover:border-blue-400 dark:hover:border-blue-500 
       transition-colors">
-        <h2 className="font-semibold text-lg text-blue-700 dark:text-blue-400 mb-2">Platform Capabilities</h2>
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">Platform Capabilities</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-white/60 dark:bg-gray-800/60 
@@ -225,7 +225,7 @@ export default function About() {
       transition-colors">
             <Shield className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
             <div>
-              <h3 className="font-semibold text-lg text-blue-700 dark:text-blue-400 mb-2">Real-Time Detection</h3>
+              <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">Real-Time Detection</h3>
               <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
                 Immediate identification of network threats with sub-second response times
               </p>
@@ -240,7 +240,7 @@ export default function About() {
       transition-colors">
             <Brain className="w-6 h-6 text-purple-600 flex-shrink-0 mt-1" />
             <div>
-              <h3 className="font-semibold text-lg text-blue-700 dark:text-blue-400 mb-2">Multi-Model Analysis</h3>
+              <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">Multi-Model Analysis</h3>
               <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
                 Choose from multiple ML algorithms optimized for different attack types
               </p>
@@ -255,7 +255,7 @@ export default function About() {
       transition-colors">
             <TrendingUp className="w-6 h-6 text-green-600 flex-shrink-0 mt-1" />
             <div>
-              <h3 className="font-semibold text-lg text-blue-700 dark:text-blue-400 mb-2">Comprehensive Analytics</h3>
+              <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">Comprehensive Analytics</h3>
               <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
                 Deep dive into traffic patterns with interactive visualizations and filters
               </p>
@@ -270,7 +270,7 @@ export default function About() {
       transition-colors">
             <Eye className="w-6 h-6 text-orange-600 flex-shrink-0 mt-1" />
             <div>
-              <h3 className="font-semibold text-lg text-blue-700 dark:text-blue-400 mb-2">Complete Transparency</h3>
+              <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">Complete Transparency</h3>
               <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
                 Full visibility into model decisions, metrics, and detection reasoning
               </p>
@@ -286,7 +286,7 @@ export default function About() {
       rounded-lg p-5 
       hover:border-blue-400 dark:hover:border-blue-500 
       transition-colors">
-        <h3 className="font-semibold text-lg text-blue-700 dark:text-blue-400 mb-2">📌 Demo Environment</h3>
+        <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">📌 Demo Environment</h3>
         <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
           This platform uses simulated network traffic data for demonstration purposes. 
           The machine learning models and detection algorithms are based on real cybersecurity 
