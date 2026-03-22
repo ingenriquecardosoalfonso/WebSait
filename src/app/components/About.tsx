@@ -226,3 +226,4 @@ export default function About() {
     </div>
   );
 }
+ /* This is the About component that provides an overview of the NetSieveX.io platform, including its mission, AI capabilities, transparency in metrics, and key features. It uses a combination of icons, headings, and descriptive text to communicate the value proposition and technical details of the platform in an engaging and informative way. The content is structured into sections for easy readability and visual appeal. */

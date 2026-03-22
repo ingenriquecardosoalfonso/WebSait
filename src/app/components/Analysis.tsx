@@ -244,4 +244,4 @@ export default function Analysis() {
       </div>
     </div>
   );
-}
+} /* This is Analysis component that provides a comprehensive comparative analysis between normal and malicious network traffic using various charts and metrics. It includes summary cards, bar charts for different features, and a scatter plot to visualize the relationship between packets and duration. The data is generated using a mock dataset for demonstration purposes. */
