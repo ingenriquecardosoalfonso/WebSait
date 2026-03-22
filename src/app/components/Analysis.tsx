@@ -96,8 +96,8 @@ export default function Analysis() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-800">Comparative Analysis</h1>
-        <p className="text-gray-600 mt-2">Comparison between normal and malicious traffic</p>
+        <h1 className="text-3xl font-bold dark:text-white underline decoration-2 decoration-sky-800">Comparative Analysis</h1>
+        <p className="text-xl dark:text-sky-200">Comparison between normal and malicious traffic</p>
       </div>
       
       {/* Summary Cards */}
@@ -148,7 +148,7 @@ export default function Analysis() {
             <BarChart data={pktsComparison}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
               <XAxis dataKey="category" stroke="#6b7280" />
-              <YAxis stroke="#6b7280" label={{ value: 'Packets/s', angle: -90, position: 'insideLeft', fill: '#6b7280' }} />
+              <YAxis stroke="#6b7280" width={80}  label={{ value: 'Packets/s', angle: -90, position: 'insideLeft', fill: '#6b7280' }} />
               <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', color: '#1f2937' }} />
               <Bar dataKey="avgPkts" name="Average Packets/s">
                 {pktsComparison.map((entry, index) => (
@@ -166,7 +166,7 @@ export default function Analysis() {
             <BarChart data={flagsComparison}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
               <XAxis dataKey="flag" stroke="#6b7280" />
-              <YAxis stroke="#6b7280" />
+              <YAxis stroke="#6b7280" width={70}  label={{ value: 'Count', angle: -90, position: 'insideLeft', fill: '#6b7280' }}  />
               <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', color: '#1f2937' }} />
               <Legend wrapperStyle={{ color: '#1f2937' }} />
               <Bar dataKey="Normal" fill="#10b981" />
@@ -202,8 +202,8 @@ export default function Analysis() {
           <ResponsiveContainer width="100%" height={400}>
             <ScatterChart>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="duration" name="Duration" unit="s" stroke="#6b7280" label={{ value: 'Duration (s)', position: 'insideBottom', offset: -5, fill: '#6b7280' }} />
-              <YAxis dataKey="packets" name="Packets" stroke="#6b7280" label={{ value: 'Total Packets', angle: -90, position: 'insideLeft', fill: '#6b7280' }} />
+              <XAxis dataKey="duration" name="Duration" unit="s" stroke="#6b7280" height={50} label={{ value: 'Duration (s)', position: 'insideBottom', offset: -5, fill: '#6b7280' }} />
+              <YAxis dataKey="packets" name="Packets" stroke="#6b7280" width={80} label={{ value: 'Total Packets', angle: -90, position: 'insideLeft', fill: '#6b7280' }} />
               <Tooltip cursor={{ strokeDasharray: '3 3' }} content={({ payload }) => {
                 if (payload && payload.length > 0) {
                   const data = payload[0].payload as any;
@@ -231,7 +231,7 @@ export default function Analysis() {
             <BarChart data={payloadComparison}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
               <XAxis dataKey="category" stroke="#6b7280" />
-              <YAxis stroke="#6b7280" label={{ value: 'Bytes/s', angle: -90, position: 'insideLeft', fill: '#6b7280' }} />
+              <YAxis stroke="#6b7280" width={80} label={{ value: 'Bytes/s', angle: -90, position: 'insideLeft', fill: '#6b7280' }} />
               <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', color: '#1f2937' }} />
               <Bar dataKey="avgPayload" name="Average Payload (Bytes/s)">
                 {payloadComparison.map((entry, index) => (

@@ -206,8 +206,8 @@ export default function App() {
             color: "#4A4A5A",
           }}
         >
-          IoT Security Analytics Platform · Machine Learning for Attack Detection ·{" "}
-          <span style={{ color: "#2A2A35" }}>Simulated data for demonstration</span>
+          <span style={{ color: "#238ab6" }}>IoT Security Analytics Platform · Machine Learning for Attack Detection ·</span>
+          <span style={{ color: "#3b90db" }}>Simulated data for demonstration</span>
         </footer>
       </main>
     </div>

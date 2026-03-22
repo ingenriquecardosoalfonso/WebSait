@@ -4,8 +4,8 @@ export default function About() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-gray-800">About NetSieveX.io</h1>
-        <p className="text-gray-600 mt-2">
+        <h1 className="text-3xl font-bold dark:text-white underline decoration-2 decoration-sky-800">About NetSieveX.io</h1>
+        <p className="text-xl dark:text-sky-200">
           Advanced IoT Security Analytics Platform powered by Machine Learning
         </p>
       </div>
