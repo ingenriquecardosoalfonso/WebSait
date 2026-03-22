@@ -120,7 +120,7 @@ export default function App() {
           </div>
         </nav>
 
-        {/* Footer sidebar */}
+        {/* Footer sidebar 123*/}
         <div className="p-3 flex justify-center" style={{ borderTop: "0.5px solid #2A2A35" }}>
           {/* <p className="text-xs text-center" style={{ color: "#4A4A5A" }}>
             Velocity TDIR · v2.1
