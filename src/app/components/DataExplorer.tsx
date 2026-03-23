@@ -14,16 +14,16 @@ export default function DataExplorer() {
     attackType: 'all',
     searchTerm: '',
   });
-  
+
   // Get unique values for filters
   const uniqueServices = useMemo(() => {
     return Array.from(new Set(dataset.map(f => f.service))).sort();
   }, [dataset]);
-  
+
   const uniqueAttackTypes = useMemo(() => {
     return Array.from(new Set(dataset.map(f => f.Attack_type))).sort();
   }, [dataset]);
-  
+
   // Filter data
   const filteredData = useMemo(() => {
     return dataset.filter(flow => {
@@ -34,18 +34,18 @@ export default function DataExplorer() {
       return true;
     });
   }, [dataset, filters]);
-  
+
   // Paginate data
   const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
   const paginatedData = useMemo(() => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
     return filteredData.slice(start, start + ITEMS_PER_PAGE);
   }, [filteredData, currentPage]);
-  
+
   // Calculate statistics for filtered data
   const stats = useMemo(() => {
     if (filteredData.length === 0) return null;
-    
+
     return {
       totalFlows: filteredData.length,
       avgDuration: (filteredData.reduce((sum, f) => sum + f.flow_duration, 0) / filteredData.length).toFixed(2),
@@ -53,15 +53,15 @@ export default function DataExplorer() {
       avgPayload: (filteredData.reduce((sum, f) => sum + f.payload_bytes_per_second, 0) / filteredData.length).toFixed(2),
     };
   }, [filteredData]);
-  
+
   const handleExport = () => {
     const csv = [
       'ID,Timestamp,Protocol,Service,Duration,Attack_Type,Fwd_Pkts,Bwd_Pkts,Pkts_Per_Sec,Payload_Bytes_Per_Sec',
-      ...filteredData.map(f => 
+      ...filteredData.map(f =>
         `${f.id},${f.timestamp.toISOString()},${f.proto},${f.service},${f.flow_duration},${f.Attack_type},${f.fwd_pkts_tot},${f.bwd_pkts_tot},${f.flow_pkts_per_sec.toFixed(2)},${f.payload_bytes_per_second.toFixed(2)}`
       )
     ].join('\n');
-    
+
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -69,36 +69,62 @@ export default function DataExplorer() {
     a.download = 'network_flows.csv';
     a.click();
   };
-  
+
+  const inputStyle = {
+    backgroundColor: 'var(--card)',
+    border: '0.5px solid var(--border)',
+    color: 'var(--foreground)',
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">Data Explorer</h1>
-          <p className="text-gray-600 mt-2">Explore and filter network flow dataset</p>
+          <h1 className="text-2xl font-semibold tracking-wide text-foreground">Data Explorer</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Explore and filter network flow dataset
+          </p>
         </div>
+
         <button
           onClick={handleExport}
-          className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-lg"
+          className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors"
+          style={{
+            backgroundColor: '#4CAF6E',
+            color: '#ffffff',
+            border: '0.5px solid #4CAF6E',
+          }}
         >
           <Download className="w-4 h-4" />
           Export CSV
         </button>
       </div>
-      
+
       {/* Filters */}
-      <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
-        <h2 className="text-lg font-semibold mb-4 text-gray-800">Filters</h2>
+      <div
+        className="rounded p-6"
+        style={{ backgroundColor: 'var(--card)', border: '0.5px solid var(--border)' }}
+      >
+        <h2
+          className="text-xs font-medium tracking-widest uppercase mb-4"
+          style={{ color: '#8A8A9A' }}
+        >
+          Filters
+        </h2>
+
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-1 text-gray-700">Protocol</label>
+            <label className="block text-sm font-medium mb-1" style={{ color: 'var(--foreground)' }}>
+              Protocol
+            </label>
             <select
               value={filters.proto}
               onChange={(e) => {
                 setFilters({ ...filters, proto: e.target.value });
                 setCurrentPage(1);
               }}
-              className="w-full p-2 border border-gray-300 rounded-lg bg-white text-gray-700"
+              className="w-full p-2 rounded-lg"
+              style={inputStyle}
             >
               <option value="all">All</option>
               <option value="tcp">TCP</option>
@@ -106,16 +132,19 @@ export default function DataExplorer() {
               <option value="icmp">ICMP</option>
             </select>
           </div>
-          
+
           <div>
-            <label className="block text-sm font-medium mb-1 text-gray-700">Service</label>
+            <label className="block text-sm font-medium mb-1" style={{ color: 'var(--foreground)' }}>
+              Service
+            </label>
             <select
               value={filters.service}
               onChange={(e) => {
                 setFilters({ ...filters, service: e.target.value });
                 setCurrentPage(1);
               }}
-              className="w-full p-2 border border-gray-300 rounded-lg bg-white text-gray-700"
+              className="w-full p-2 rounded-lg"
+              style={inputStyle}
             >
               <option value="all">All</option>
               {uniqueServices.map(service => (
@@ -123,16 +152,19 @@ export default function DataExplorer() {
               ))}
             </select>
           </div>
-          
+
           <div>
-            <label className="block text-sm font-medium mb-1 text-gray-700">Attack Type</label>
+            <label className="block text-sm font-medium mb-1" style={{ color: 'var(--foreground)' }}>
+              Attack Type
+            </label>
             <select
               value={filters.attackType}
               onChange={(e) => {
                 setFilters({ ...filters, attackType: e.target.value });
                 setCurrentPage(1);
               }}
-              className="w-full p-2 border border-gray-300 rounded-lg bg-white text-gray-700"
+              className="w-full p-2 rounded-lg"
+              style={inputStyle}
             >
               <option value="all">All</option>
               {uniqueAttackTypes.map(type => (
@@ -140,11 +172,13 @@ export default function DataExplorer() {
               ))}
             </select>
           </div>
-          
+
           <div>
-            <label className="block text-sm font-medium mb-1 text-gray-700">Search by ID</label>
+            <label className="block text-sm font-medium mb-1" style={{ color: 'var(--foreground)' }}>
+              Search by ID
+            </label>
             <div className="relative">
-              <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-2.5 w-4 h-4" style={{ color: 'var(--vt-text-muted)' }} />
               <input
                 type="text"
                 placeholder="flow-123..."
@@ -153,73 +187,134 @@ export default function DataExplorer() {
                   setFilters({ ...filters, searchTerm: e.target.value });
                   setCurrentPage(1);
                 }}
-                className="w-full p-2 pl-9 border border-gray-300 rounded-lg bg-white text-gray-700 placeholder:text-gray-400"
+                className="w-full p-2 pl-9 rounded-lg"
+                style={inputStyle}
               />
             </div>
           </div>
         </div>
       </div>
-      
+
       {/* Statistics */}
       {stats && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white p-4 rounded-lg shadow text-center border border-gray-200">
-            <p className="text-sm text-gray-600">Filtered Flows</p>
-            <p className="text-2xl font-bold mt-1 text-blue-600">{stats.totalFlows}</p>
+          <div
+            className="rounded p-4 text-center"
+            style={{ backgroundColor: 'var(--card)', border: '0.5px solid var(--border)' }}
+          >
+            <p className="text-sm" style={{ color: 'var(--vt-text-muted)' }}>Filtered Flows</p>
+            <p className="text-2xl font-semibold mt-1" style={{ color: '#00B8CC' }}>{stats.totalFlows}</p>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow text-center border border-gray-200">
-            <p className="text-sm text-gray-600">Average Duration</p>
-            <p className="text-2xl font-bold mt-1 text-green-600">{stats.avgDuration}s</p>
+
+          <div
+            className="rounded p-4 text-center"
+            style={{ backgroundColor: 'var(--card)', border: '0.5px solid var(--border)' }}
+          >
+            <p className="text-sm" style={{ color: 'var(--vt-text-muted)' }}>Average Duration</p>
+            <p className="text-2xl font-semibold mt-1" style={{ color: '#4CAF6E' }}>{stats.avgDuration}s</p>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow text-center border border-gray-200">
-            <p className="text-sm text-gray-600">Average Packets</p>
-            <p className="text-2xl font-bold mt-1 text-purple-600">{stats.avgPackets}</p>
+
+          <div
+            className="rounded p-4 text-center"
+            style={{ backgroundColor: 'var(--card)', border: '0.5px solid var(--border)' }}
+          >
+            <p className="text-sm" style={{ color: 'var(--vt-text-muted)' }}>Average Packets</p>
+            <p className="text-2xl font-semibold mt-1" style={{ color: '#E8C840' }}>{stats.avgPackets}</p>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow text-center border border-gray-200">
-            <p className="text-sm text-gray-600">Average Payload</p>
-            <p className="text-2xl font-bold mt-1 text-orange-600">{stats.avgPayload} B/s</p>
+
+          <div
+            className="rounded p-4 text-center"
+            style={{ backgroundColor: 'var(--card)', border: '0.5px solid var(--border)' }}
+          >
+            <p className="text-sm" style={{ color: 'var(--vt-text-muted)' }}>Average Payload</p>
+            <p className="text-2xl font-semibold mt-1" style={{ color: '#E8383A' }}>{stats.avgPayload} B/s</p>
           </div>
         </div>
       )}
-      
+
       {/* Data Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden border border-gray-200">
+      <div
+        className="rounded overflow-hidden"
+        style={{ backgroundColor: 'var(--card)', border: '0.5px solid var(--border)' }}
+      >
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-100 border-b border-gray-200">
+            <thead
+              style={{
+                backgroundColor: 'rgba(255,255,255,0.03)',
+                borderBottom: '0.5px solid var(--border)',
+              }}
+            >
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">ID</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">Timestamp</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">Proto</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">Service</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">Duration</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">Fwd Pkts</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">Bwd Pkts</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">Pkts/s</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">Attack Type</th>
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase" style={{ color: '#8A8A9A' }}>ID</th>
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase" style={{ color: '#8A8A9A' }}>Timestamp</th>
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase" style={{ color: '#8A8A9A' }}>Proto</th>
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase" style={{ color: '#8A8A9A' }}>Service</th>
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase" style={{ color: '#8A8A9A' }}>Duration</th>
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase" style={{ color: '#8A8A9A' }}>Fwd Pkts</th>
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase" style={{ color: '#8A8A9A' }}>Bwd Pkts</th>
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase" style={{ color: '#8A8A9A' }}>Pkts/s</th>
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase" style={{ color: '#8A8A9A' }}>Attack Type</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+
+            <tbody>
               {paginatedData.map((flow) => (
-                <tr key={flow.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-3 text-sm font-mono text-gray-700">{flow.id}</td>
-                  <td className="px-4 py-3 text-sm text-gray-700">{flow.timestamp.toLocaleString('es-ES')}</td>
+                <tr
+                  key={flow.id}
+                  className="transition-colors"
+                  style={{ borderTop: '0.5px solid var(--border)' }}
+                >
+                  <td className="px-4 py-3 text-sm font-mono" style={{ color: 'var(--foreground)' }}>
+                    {flow.id}
+                  </td>
+                  <td className="px-4 py-3 text-sm" style={{ color: 'var(--foreground)' }}>
+                    {flow.timestamp.toLocaleString('es-ES')}
+                  </td>
                   <td className="px-4 py-3 text-sm">
-                    <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-semibold border border-blue-200">
+                    <span
+                      className="px-2 py-1 rounded text-xs font-semibold"
+                      style={{
+                        backgroundColor: 'rgba(0,184,204,0.08)',
+                        color: '#00B8CC',
+                        border: '0.5px solid #00B8CC',
+                      }}
+                    >
                       {flow.proto.toUpperCase()}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">{flow.service}</td>
-                  <td className="px-4 py-3 text-sm text-gray-700">{flow.flow_duration.toFixed(2)}s</td>
-                  <td className="px-4 py-3 text-sm text-gray-700">{flow.fwd_pkts_tot}</td>
-                  <td className="px-4 py-3 text-sm text-gray-700">{flow.bwd_pkts_tot}</td>
-                  <td className="px-4 py-3 text-sm text-gray-700">{flow.flow_pkts_per_sec.toFixed(2)}</td>
+                  <td className="px-4 py-3 text-sm" style={{ color: 'var(--foreground)' }}>
+                    {flow.service}
+                  </td>
+                  <td className="px-4 py-3 text-sm" style={{ color: 'var(--foreground)' }}>
+                    {flow.flow_duration.toFixed(2)}s
+                  </td>
+                  <td className="px-4 py-3 text-sm" style={{ color: 'var(--foreground)' }}>
+                    {flow.fwd_pkts_tot}
+                  </td>
+                  <td className="px-4 py-3 text-sm" style={{ color: 'var(--foreground)' }}>
+                    {flow.bwd_pkts_tot}
+                  </td>
+                  <td className="px-4 py-3 text-sm" style={{ color: 'var(--foreground)' }}>
+                    {flow.flow_pkts_per_sec.toFixed(2)}
+                  </td>
                   <td className="px-4 py-3 text-sm">
-                    <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                      flow.Attack_type === 'Normal'
-                        ? 'bg-green-100 text-green-700 border border-green-200'
-                        : 'bg-red-100 text-red-700 border border-red-200'
-                    }`}>
+                    <span
+                      className="px-2 py-1 rounded text-xs font-semibold"
+                      style={
+                        flow.Attack_type === 'Normal'
+                          ? {
+                              backgroundColor: 'rgba(76,175,110,0.08)',
+                              color: '#4CAF6E',
+                              border: '0.5px solid #4CAF6E',
+                            }
+                          : {
+                              backgroundColor: 'rgba(232,56,58,0.08)',
+                              color: '#E8383A',
+                              border: '0.5px solid #E8383A',
+                            }
+                      }
+                    >
                       {flow.Attack_type}
                     </span>
                   </td>
@@ -228,20 +323,33 @@ export default function DataExplorer() {
             </tbody>
           </table>
         </div>
-        
+
         {/* Pagination */}
-        <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-t border-gray-200">
-          <div className="text-sm text-gray-600">
+        <div
+          className="flex items-center justify-between px-4 py-3"
+          style={{
+            backgroundColor: 'rgba(255,255,255,0.03)',
+            borderTop: '0.5px solid var(--border)',
+          }}
+        >
+          <div className="text-sm" style={{ color: 'var(--vt-text-muted)' }}>
             Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} - {Math.min(currentPage * ITEMS_PER_PAGE, filteredData.length)} of {filteredData.length} results
           </div>
+
           <div className="flex gap-2">
             <button
               onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="p-2 border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700"
+              className="p-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                backgroundColor: 'rgba(255,255,255,0.03)',
+                border: '0.5px solid var(--border)',
+                color: 'var(--foreground)',
+              }}
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
+
             <div className="flex items-center gap-1">
               {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                 const pageNum = i + 1;
@@ -249,22 +357,37 @@ export default function DataExplorer() {
                   <button
                     key={pageNum}
                     onClick={() => setCurrentPage(pageNum)}
-                    className={`px-3 py-1 rounded-lg ${
+                    className="px-3 py-1 rounded-lg"
+                    style={
                       currentPage === pageNum
-                        ? 'bg-blue-600 text-white'
-                        : 'text-gray-700 hover:bg-gray-100'
-                    }`}
+                        ? {
+                            backgroundColor: '#00B8CC',
+                            color: '#ffffff',
+                            border: '0.5px solid #00B8CC',
+                          }
+                        : {
+                            backgroundColor: 'transparent',
+                            color: 'var(--foreground)',
+                            border: '0.5px solid transparent',
+                          }
+                    }
                   >
                     {pageNum}
                   </button>
                 );
               })}
-              {totalPages > 5 && <span className="px-2 text-gray-400">...</span>}
+              {totalPages > 5 && <span className="px-2" style={{ color: 'var(--vt-text-muted)' }}>...</span>}
             </div>
+
             <button
               onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="p-2 border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700"
+              className="p-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                backgroundColor: 'rgba(255,255,255,0.03)',
+                border: '0.5px solid var(--border)',
+                color: 'var(--foreground)',
+              }}
             >
               <ChevronRight className="w-4 h-4" />
             </button>
