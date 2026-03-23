@@ -18,25 +18,25 @@ export default function Detector() {
     flow_RST_flag_count: '0',
     flow_FIN_flag_count: '1',
   });
-  
+
   const [selectedModel, setSelectedModel] = useState('Random Forest');
   const [excelData, setExcelData] = useState('');
   const [showExcelImport, setShowExcelImport] = useState(false);
-  
+
   const [prediction, setPrediction] = useState<{
     type: string;
     confidence: number;
     riskLevel: 'low' | 'medium' | 'high';
     topFeatures: { name: string; impact: string }[];
   } | null>(null);
-  
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
   };
-  
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -49,9 +49,8 @@ export default function Detector() {
       reader.readAsText(file);
     }
   };
-  
+
   const handleImportData = () => {
-    // Parse the Excel data (assuming CSV format)
     try {
       const lines = excelData.trim().split('\n');
       if (lines.length > 1) {
@@ -75,19 +74,17 @@ export default function Detector() {
       console.error('Error parsing data:', error);
     }
   };
-  
+
   const detectAttack = () => {
-    // Simulate ML prediction based on input values
     const pktsPerSec = parseFloat(formData.flow_pkts_per_sec);
     const synCount = parseFloat(formData.flow_SYN_flag_count);
     const rstCount = parseFloat(formData.flow_RST_flag_count);
     const payloadBytes = parseFloat(formData.payload_bytes_per_second);
-    
+
     let predictedType = 'Normal';
     let confidence = 0.92;
     let riskLevel: 'low' | 'medium' | 'high' = 'low';
-    
-    // Simple heuristic detection
+
     if (pktsPerSec > 500 || synCount > 20 || payloadBytes > 20000) {
       predictedType = pktsPerSec > 1000 ? 'DDoS' : 'DoS';
       confidence = 0.89;
@@ -101,13 +98,13 @@ export default function Detector() {
       confidence = 0.87;
       riskLevel = 'high';
     }
-    
+
     const topFeatures = [
       { name: 'flow_pkts_per_sec', impact: pktsPerSec > 100 ? 'High' : 'Normal' },
       { name: 'flow_SYN_flag_count', impact: synCount > 5 ? 'High' : 'Normal' },
       { name: 'payload_bytes_per_second', impact: payloadBytes > 10000 ? 'High' : 'Normal' },
     ];
-    
+
     setPrediction({
       type: predictedType,
       confidence,
@@ -115,40 +112,67 @@ export default function Detector() {
       topFeatures,
     });
   };
-  
-  const getRiskColor = (level: string) => {
-    switch (level) {
-      case 'low': return 'text-green-700 bg-green-100 border border-green-300';
-      case 'medium': return 'text-yellow-700 bg-yellow-100 border border-yellow-300';
-      case 'high': return 'text-red-700 bg-red-100 border border-red-300';
-      default: return 'text-gray-700 bg-gray-100 border border-gray-300';
-    }
+
+  const riskStyles = {
+    low: {
+      bg: 'rgba(76,175,110,0.08)',
+      border: '#4CAF6E',
+      text: '#4CAF6E',
+      icon: <CheckCircle className="w-16 h-16" style={{ color: '#4CAF6E' }} />,
+    },
+    medium: {
+      bg: 'rgba(232,200,64,0.08)',
+      border: '#E8C840',
+      text: '#E8C840',
+      icon: <AlertTriangle className="w-16 h-16" style={{ color: '#E8C840' }} />,
+    },
+    high: {
+      bg: 'rgba(232,56,58,0.08)',
+      border: '#E8383A',
+      text: '#E8383A',
+      icon: <Shield className="w-16 h-16" style={{ color: '#E8383A' }} />,
+    },
   };
-  
-  const getRiskIcon = (level: string) => {
-    switch (level) {
-      case 'low': return <CheckCircle className="w-16 h-16 text-green-500" />;
-      case 'medium': return <AlertTriangle className="w-16 h-16 text-yellow-500" />;
-      case 'high': return <Shield className="w-16 h-16 text-red-500" />;
-      default: return <Activity className="w-16 h-16 text-gray-500" />;
-    }
+
+  const currentRiskStyle = prediction ? riskStyles[prediction.riskLevel] : null;
+
+  const inputStyle = {
+    backgroundColor: 'var(--card)',
+    border: '0.5px solid var(--border)',
+    color: 'var(--foreground)',
   };
-  
+
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-800">AI Attack Detection Engine</h1>
-        <p className="text-gray-600 mt-2">Enter network flow characteristics to detect potential attacks</p>
+        <h1 className="text-2xl font-semibold tracking-wide text-foreground">
+          AI ATTACK DETECTION ENGINE
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Enter network flow characteristics to detect potential attacks
+        </p>
       </div>
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Input Form */}
-        <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
-          <h2 className="text-xl font-semibold mb-4 text-gray-800">Flow Characteristics</h2>
-          
+        <div
+          className="rounded p-6"
+          style={{ backgroundColor: 'var(--card)', border: '0.5px solid var(--border)' }}
+        >
+          <h2
+            className="text-xs font-medium tracking-widest uppercase mb-4"
+            style={{ color: '#8A8A9A' }}
+          >
+            Flow Characteristics
+          </h2>
+
           {/* Excel Upload Section */}
-          <div className="mb-6 pb-4 border-b border-gray-200">
-            <label className="block text-sm font-medium mb-2 text-gray-700">Import from Excel</label>
+          <div className="mb-6 pb-4" style={{ borderBottom: '0.5px solid var(--border)' }}>
+            <label className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
+              Import from Excel
+            </label>
+
             <div className="flex gap-2">
               <input
                 type="file"
@@ -157,224 +181,328 @@ export default function Detector() {
                 className="hidden"
                 id="excel-upload"
               />
+
               <label
                 htmlFor="excel-upload"
-                className="flex-1 flex items-center justify-center gap-2 py-2 px-4 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors cursor-pointer border border-gray-300"
+                className="flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded font-medium cursor-pointer transition-colors"
+                style={{
+                  backgroundColor: 'rgba(255,255,255,0.03)',
+                  border: '0.5px solid var(--border)',
+                  color: 'var(--foreground)',
+                }}
               >
                 <FileSpreadsheet className="w-4 h-4" />
                 Choose File
               </label>
+
               {showExcelImport && (
                 <button
                   onClick={handleImportData}
-                  className="flex items-center gap-2 py-2 px-4 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors"
+                  className="flex items-center gap-2 py-2 px-4 rounded font-medium transition-colors"
+                  style={{
+                    backgroundColor: '#4CAF6E',
+                    color: '#ffffff',
+                    border: '0.5px solid #4CAF6E',
+                  }}
                 >
                   <Upload className="w-4 h-4" />
                   Import
                 </button>
               )}
             </div>
+
             {showExcelImport && (
-              <p className="text-xs text-green-600 mt-2">✓ File loaded. Click "Import" to paste values.</p>
+              <p className="text-xs mt-2" style={{ color: '#4CAF6E' }}>
+                ✓ File loaded. Click "Import" to paste values.
+              </p>
             )}
           </div>
-          
+
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-700">Protocol</label>
+              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--foreground)' }}>
+                Protocol
+              </label>
               <select
                 name="proto"
                 value={formData.proto}
                 onChange={handleInputChange}
-                className="w-full p-2 border border-gray-300 rounded-lg bg-white text-gray-700"
+                className="w-full p-2 rounded-lg"
+                style={inputStyle}
               >
                 {PROTOCOLS.map(proto => (
-                  <option key={proto} value={proto}>{proto.toUpperCase()}</option>
+                  <option key={proto} value={proto}>
+                    {proto.toUpperCase()}
+                  </option>
                 ))}
               </select>
             </div>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1 text-gray-700">Duration (sec)</label>
+                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--foreground)' }}>
+                  Duration (sec)
+                </label>
                 <input
                   type="number"
                   name="flow_duration"
                   value={formData.flow_duration}
                   onChange={handleInputChange}
-                  className="w-full p-2 border border-gray-300 rounded-lg bg-white text-gray-700"
+                  className="w-full p-2 rounded-lg"
+                  style={inputStyle}
                 />
               </div>
-              
+
               <div>
-                <label className="block text-sm font-medium mb-1 text-gray-700">Packets/sec</label>
+                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--foreground)' }}>
+                  Packets/sec
+                </label>
                 <input
                   type="number"
                   name="flow_pkts_per_sec"
                   value={formData.flow_pkts_per_sec}
                   onChange={handleInputChange}
-                  className="w-full p-2 border border-gray-300 rounded-lg bg-white text-gray-700"
+                  className="w-full p-2 rounded-lg"
+                  style={inputStyle}
                 />
               </div>
             </div>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1 text-gray-700">Forward Packets</label>
+                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--foreground)' }}>
+                  Forward Packets
+                </label>
                 <input
                   type="number"
                   name="fwd_pkts_tot"
                   value={formData.fwd_pkts_tot}
                   onChange={handleInputChange}
-                  className="w-full p-2 border border-gray-300 rounded-lg bg-white text-gray-700"
+                  className="w-full p-2 rounded-lg"
+                  style={inputStyle}
                 />
               </div>
-              
+
               <div>
-                <label className="block text-sm font-medium mb-1 text-gray-700">Backward Packets</label>
+                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--foreground)' }}>
+                  Backward Packets
+                </label>
                 <input
                   type="number"
                   name="bwd_pkts_tot"
                   value={formData.bwd_pkts_tot}
                   onChange={handleInputChange}
-                  className="w-full p-2 border border-gray-300 rounded-lg bg-white text-gray-700"
+                  className="w-full p-2 rounded-lg"
+                  style={inputStyle}
                 />
               </div>
             </div>
-            
+
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-700">Payload Bytes/sec</label>
+              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--foreground)' }}>
+                Payload Bytes/sec
+              </label>
               <input
                 type="number"
                 name="payload_bytes_per_second"
                 value={formData.payload_bytes_per_second}
                 onChange={handleInputChange}
-                className="w-full p-2 border border-gray-300 rounded-lg bg-white text-gray-700"
+                className="w-full p-2 rounded-lg"
+                style={inputStyle}
               />
             </div>
-            
-            <div className="border-t border-gray-200 pt-4">
-              <p className="text-sm font-medium mb-3 text-gray-700">TCP Flags</p>
+
+            <div className="pt-4" style={{ borderTop: '0.5px solid var(--border)' }}>
+              <p className="text-sm font-medium mb-3" style={{ color: 'var(--foreground)' }}>
+                TCP Flags
+              </p>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs text-gray-600 mb-1">SYN Count</label>
+                  <label className="block text-xs mb-1" style={{ color: 'var(--vt-text-muted)' }}>
+                    SYN Count
+                  </label>
                   <input
                     type="number"
                     name="flow_SYN_flag_count"
                     value={formData.flow_SYN_flag_count}
                     onChange={handleInputChange}
-                    className="w-full p-2 border border-gray-300 rounded-lg bg-white text-gray-700"
+                    className="w-full p-2 rounded-lg"
+                    style={inputStyle}
                   />
                 </div>
-                
+
                 <div>
-                  <label className="block text-xs text-gray-600 mb-1">ACK Count</label>
+                  <label className="block text-xs mb-1" style={{ color: 'var(--vt-text-muted)' }}>
+                    ACK Count
+                  </label>
                   <input
                     type="number"
                     name="flow_ACK_flag_count"
                     value={formData.flow_ACK_flag_count}
                     onChange={handleInputChange}
-                    className="w-full p-2 border border-gray-300 rounded-lg bg-white text-gray-700"
+                    className="w-full p-2 rounded-lg"
+                    style={inputStyle}
                   />
                 </div>
-                
+
                 <div>
-                  <label className="block text-xs text-gray-600 mb-1">RST Count</label>
+                  <label className="block text-xs mb-1" style={{ color: 'var(--vt-text-muted)' }}>
+                    RST Count
+                  </label>
                   <input
                     type="number"
                     name="flow_RST_flag_count"
                     value={formData.flow_RST_flag_count}
                     onChange={handleInputChange}
-                    className="w-full p-2 border border-gray-300 rounded-lg bg-white text-gray-700"
+                    className="w-full p-2 rounded-lg"
+                    style={inputStyle}
                   />
                 </div>
-                
+
                 <div>
-                  <label className="block text-xs text-gray-600 mb-1">FIN Count</label>
+                  <label className="block text-xs mb-1" style={{ color: 'var(--vt-text-muted)' }}>
+                    FIN Count
+                  </label>
                   <input
                     type="number"
                     name="flow_FIN_flag_count"
                     value={formData.flow_FIN_flag_count}
                     onChange={handleInputChange}
-                    className="w-full p-2 border border-gray-300 rounded-lg bg-white text-gray-700"
+                    className="w-full p-2 rounded-lg"
+                    style={inputStyle}
                   />
                 </div>
               </div>
             </div>
-            
-            {/* Model Selection and Analyze Button */}
-            <div className="flex gap-2 border-t border-gray-200 pt-4">
+
+            <div className="flex gap-2 pt-4" style={{ borderTop: '0.5px solid var(--border)' }}>
               <select
                 value={selectedModel}
                 onChange={(e) => setSelectedModel(e.target.value)}
-                className="flex-1 p-2 border border-gray-300 rounded-lg bg-white text-gray-700"
+                className="flex-1 p-2 rounded-lg"
+                style={inputStyle}
               >
                 {ML_MODELS.map(model => (
-                  <option key={model} value={model}>{model}</option>
+                  <option key={model} value={model}>
+                    {model}
+                  </option>
                 ))}
               </select>
+
               <button
                 onClick={detectAttack}
-                className="flex-1 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all shadow-lg"
+                className="flex-1 py-2 rounded-lg font-semibold transition-all"
+                style={{
+                  backgroundColor: '#00B8CC',
+                  color: '#ffffff',
+                  border: '0.5px solid #00B8CC',
+                }}
               >
-                🔍 Analyze
+                Analyze
               </button>
             </div>
           </div>
         </div>
-        
+
         {/* Results */}
-        <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
-          <h2 className="text-xl font-semibold mb-4 text-gray-800">Analysis Result</h2>
-          
+        <div
+          className="rounded p-6"
+          style={{ backgroundColor: 'var(--card)', border: '0.5px solid var(--border)' }}
+        >
+          <h2
+            className="text-xs font-medium tracking-widest uppercase mb-4"
+            style={{ color: '#8A8A9A' }}
+          >
+            Analysis Result
+          </h2>
+
           {prediction ? (
             <div className="space-y-6">
-              {/* Risk Level Indicator */}
-              <div className="text-center py-8 border-b border-gray-200">
-                <div className="flex justify-center mb-4">
-                  {getRiskIcon(prediction.riskLevel)}
-                </div>
-                <h3 className="text-2xl font-bold mb-2 text-gray-800">{prediction.type}</h3>
-                <span className={`inline-block px-4 py-2 rounded-lg text-sm font-semibold ${getRiskColor(prediction.riskLevel)}`}>
-                  Risk Level: {prediction.riskLevel.toUpperCase()}</span>
+              <div className="text-center py-8" style={{ borderBottom: '0.5px solid var(--border)' }}>
+                <div className="flex justify-center mb-4">{currentRiskStyle?.icon}</div>
+
+                <h3 className="text-2xl font-semibold mb-2" style={{ color: 'var(--foreground)' }}>
+                  {prediction.type}
+                </h3>
+
+                <span
+                  className="inline-block px-4 py-2 rounded-lg text-sm font-semibold"
+                  style={{
+                    backgroundColor: currentRiskStyle?.bg,
+                    color: currentRiskStyle?.text,
+                    border: `0.5px solid ${currentRiskStyle?.border}`,
+                  }}
+                >
+                  Risk Level: {prediction.riskLevel.toUpperCase()}
+                </span>
               </div>
-              
-              {/* Confidence */}
+
               <div>
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium text-gray-700">Model Confidence</span>
-                  <span className="font-bold text-gray-800">{(prediction.confidence * 100).toFixed(1)}%</span>
+                  <span className="text-sm font-medium" style={{ color: 'var(--foreground)' }}>
+                    Model Confidence
+                  </span>
+                  <span className="font-semibold" style={{ color: 'var(--foreground)' }}>
+                    {(prediction.confidence * 100).toFixed(1)}%
+                  </span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-3">
+
+                <div
+                  className="w-full rounded-full h-3"
+                  style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}
+                >
                   <div
-                    className="bg-blue-600 h-3 rounded-full transition-all"
-                    style={{ width: `${prediction.confidence * 100}%` }}
+                    className="h-3 rounded-full transition-all"
+                    style={{
+                      width: `${prediction.confidence * 100}%`,
+                      backgroundColor: '#00B8CC',
+                    }}
                   />
                 </div>
               </div>
-              
-              {/* Top Features */}
+
               <div>
-                <h3 className="font-semibold mb-3 text-gray-800">Determining Features</h3>
+                <h3 className="font-semibold mb-3" style={{ color: 'var(--foreground)' }}>
+                  Determining Features
+                </h3>
+
                 <div className="space-y-2">
                   {prediction.topFeatures.map((feature, idx) => (
-                    <div key={idx} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg border border-gray-200">
-                      <span className="text-sm font-mono text-gray-700">{feature.name}</span>
-                      <span className={`text-sm font-semibold ${
-                        feature.impact === 'High' ? 'text-red-600' : 'text-green-600'
-                      }`}>
+                    <div
+                      key={idx}
+                      className="flex justify-between items-center p-3 rounded-lg"
+                      style={{
+                        backgroundColor: 'rgba(255,255,255,0.03)',
+                        border: '0.5px solid var(--border)',
+                      }}
+                    >
+                      <span className="text-sm font-mono" style={{ color: 'var(--foreground)' }}>
+                        {feature.name}
+                      </span>
+                      <span
+                        className="text-sm font-semibold"
+                        style={{ color: feature.impact === 'High' ? '#E8383A' : '#4CAF6E' }}
+                      >
                         {feature.impact}
                       </span>
                     </div>
                   ))}
                 </div>
               </div>
-              
-              {/* Recommendations */}
+
               {prediction.type !== 'Normal' && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <h3 className="font-semibold text-red-800 mb-2">⚠️ Recommendations</h3>
-                  <ul className="text-sm text-red-700 space-y-1 list-disc list-inside">
+                <div
+                  className="rounded-lg p-4"
+                  style={{
+                    backgroundColor: 'rgba(232,56,58,0.08)',
+                    border: '0.5px solid #E8383A',
+                  }}
+                >
+                  <h3 className="font-semibold mb-2" style={{ color: '#E8383A' }}>
+                    Recommendations
+                  </h3>
+                  <ul className="text-sm space-y-1 list-disc list-inside" style={{ color: '#c42e30' }}>
                     <li>Block source IP immediately</li>
                     <li>Enable rate limiting on firewall</li>
                     <li>Review security logs</li>
@@ -384,7 +512,7 @@ export default function Detector() {
               )}
             </div>
           ) : (
-            <div className="text-center py-16 text-gray-500">
+            <div className="text-center py-16" style={{ color: 'var(--vt-text-muted)' }}>
               <Activity className="w-24 h-24 mx-auto mb-4 opacity-20" />
               <p>Enter flow characteristics and click "Analyze"</p>
             </div>
