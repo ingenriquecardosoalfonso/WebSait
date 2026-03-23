@@ -46,48 +46,28 @@ export default function About() {
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-            <div className="bg-white/60 dark:bg-gray-800/60 
-      backdrop-blur-sm 
-      border border-gray-200 dark:border-gray-600 
-      rounded-lg p-5 
-      hover:border-blue-400 dark:hover:border-blue-500 
-      transition-colors">
+            <div className="rounded p-6" style={{ backgroundColor: "var(--card)", border: "0.5px solid var(--border)" }}>
               <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">🤖 Random Forest</h3>
               <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
                 Ensemble learning method for robust attack classification with high accuracy and low false positives.
               </p>
             </div>
             
-            <div className="bg-white/60 dark:bg-gray-800/60 
-      backdrop-blur-sm 
-      border border-gray-200 dark:border-gray-600 
-      rounded-lg p-5 
-      hover:border-blue-400 dark:hover:border-blue-500 
-      transition-colors">
+            <div className="rounded p-6" style={{ backgroundColor: "var(--card)", border: "0.5px solid var(--border)" }}>
               <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">🧠 Neural Networks</h3>
               <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
                 Deep learning models that identify complex patterns in network traffic for advanced threat detection.
               </p>
             </div>
             
-            <div className="bg-white/60 dark:bg-gray-800/60 
-      backdrop-blur-sm 
-      border border-gray-200 dark:border-gray-600 
-      rounded-lg p-5 
-      hover:border-blue-400 dark:hover:border-blue-500 
-      transition-colors">
+            <div className="rounded p-6" style={{ backgroundColor: "var(--card)", border: "0.5px solid var(--border)" }}>
               <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">📊 Gradient Boosting</h3>
               <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
                 Powerful ensemble technique that combines weak learners to create highly accurate predictions.
               </p>
             </div>
             
-            <div className="bg-white/60 dark:bg-gray-800/60 
-      backdrop-blur-sm 
-      border border-gray-200 dark:border-gray-600 
-      rounded-lg p-5 
-      hover:border-blue-400 dark:hover:border-blue-500 
-      transition-colors">
+            <div className="rounded p-6" style={{ backgroundColor: "var(--card)", border: "0.5px solid var(--border)" }}>
               <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">🎯 SVM (Support Vector Machine)</h3>
               <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
                 Effective classification algorithm for separating normal traffic from attack patterns.
@@ -95,12 +75,7 @@ export default function About() {
             </div>
           </div>
 
-          <div className="bg-white/60 dark:bg-gray-800/60 
-      backdrop-blur-sm 
-      border border-gray-200 dark:border-gray-600 
-      rounded-lg p-5 
-      hover:border-blue-400 dark:hover:border-blue-500 
-      transition-colors">
+          <div className="rounded p-6" style={{ backgroundColor: "var(--card)", border: "0.5px solid var(--border)" }}>
             <div className="flex items-start gap-3">
               <Lightbulb className="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" />
               <div>
@@ -116,12 +91,7 @@ export default function About() {
       </div>
 
       {/* Transparency & Metrics Section */}
-      <div className="bg-white/60 dark:bg-gray-800/60 
-      backdrop-blur-sm 
-      border border-gray-200 dark:border-gray-600 
-      rounded-lg p-5 
-      hover:border-blue-400 dark:hover:border-blue-500 
-      transition-colors">
+      <div className="rounded p-6" style={{ backgroundColor: "var(--card)", border: "0.5px solid var(--border)" }}>
         <div className="flex items-center gap-3 mb-6">
           <Eye className="w-8 h-8 text-green-600" />
           <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">Transparency & Metrics</h2>
@@ -186,12 +156,7 @@ export default function About() {
             </ul>
           </div>
 
-          <div className="bg-white/60 dark:bg-gray-800/60 
-      backdrop-blur-sm 
-      border border-gray-200 dark:border-gray-600 
-      rounded-lg p-5 
-      hover:border-blue-400 dark:hover:border-blue-500 
-      transition-colors">
+         <div className="rounded p-6" style={{ backgroundColor: "var(--card)", border: "0.5px solid var(--border)" }}>
             <div className="flex items-start gap-3">
               <AlertCircle className="w-6 h-6 text-pink-600 flex-shrink-0 mt-0.5" />
               <div>
@@ -208,21 +173,11 @@ export default function About() {
       </div>
 
       {/* Key Features */}
-      <div className="bg-white/60 dark:bg-gray-800/60 
-      backdrop-blur-sm 
-      border border-gray-200 dark:border-gray-600 
-      rounded-lg p-5 
-      hover:border-blue-400 dark:hover:border-blue-500 
-      transition-colors">
+      <div className="rounded p-6" style={{ backgroundColor: "var(--card)", border: "0.5px solid var(--border)" }}>
         <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">Platform Capabilities</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-white/60 dark:bg-gray-800/60 
-      backdrop-blur-sm 
-      border border-gray-200 dark:border-gray-600 
-      rounded-lg p-5 
-      hover:border-blue-400 dark:hover:border-blue-500 
-      transition-colors">
+          <div className="rounded p-6" style={{ backgroundColor: "var(--card)", border: "0.5px solid var(--border)" }}>
             <Shield className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
             <div>
               <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">Real-Time Detection</h3>
@@ -232,12 +187,7 @@ export default function About() {
             </div>
           </div>
           
-          <div className="bg-white/60 dark:bg-gray-800/60 
-      backdrop-blur-sm 
-      border border-gray-200 dark:border-gray-600 
-      rounded-lg p-5 
-      hover:border-blue-400 dark:hover:border-blue-500 
-      transition-colors">
+          <div className="rounded p-6" style={{ backgroundColor: "var(--card)", border: "0.5px solid var(--border)" }}>
             <Brain className="w-6 h-6 text-purple-600 flex-shrink-0 mt-1" />
             <div>
               <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">Multi-Model Analysis</h3>
@@ -247,12 +197,7 @@ export default function About() {
             </div>
           </div>
           
-          <div className="bg-white/60 dark:bg-gray-800/60 
-      backdrop-blur-sm 
-      border border-gray-200 dark:border-gray-600 
-      rounded-lg p-5 
-      hover:border-blue-400 dark:hover:border-blue-500 
-      transition-colors">
+          <div className="rounded p-6" style={{ backgroundColor: "var(--card)", border: "0.5px solid var(--border)" }}>
             <TrendingUp className="w-6 h-6 text-green-600 flex-shrink-0 mt-1" />
             <div>
               <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">Comprehensive Analytics</h3>
@@ -262,12 +207,7 @@ export default function About() {
             </div>
           </div>
           
-          <div className="bg-white/60 dark:bg-gray-800/60 
-      backdrop-blur-sm 
-      border border-gray-200 dark:border-gray-600 
-      rounded-lg p-5 
-      hover:border-blue-400 dark:hover:border-blue-500 
-      transition-colors">
+          <div className="rounded p-6" style={{ backgroundColor: "var(--card)", border: "0.5px solid var(--border)" }}>
             <Eye className="w-6 h-6 text-orange-600 flex-shrink-0 mt-1" />
             <div>
               <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">Complete Transparency</h3>
@@ -280,12 +220,7 @@ export default function About() {
       </div>
 
       {/* Demo Notice */}
-      <div className="bg-white/60 dark:bg-gray-800/60 
-      backdrop-blur-sm 
-      border border-gray-200 dark:border-gray-600 
-      rounded-lg p-5 
-      hover:border-blue-400 dark:hover:border-blue-500 
-      transition-colors">
+      <div className="rounded p-6" style={{ backgroundColor: "var(--card)", border: "0.5px solid var(--border)" }}>
         <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">📌 Demo Environment</h3>
         <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
           This platform uses simulated network traffic data for demonstration purposes. 

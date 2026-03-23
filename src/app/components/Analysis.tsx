@@ -102,12 +102,7 @@ export default function Analysis() {
       
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-white/60 dark:bg-gray-800/60 
-      backdrop-blur-sm 
-      border border-gray-200 dark:border-gray-600 
-      rounded-lg p-5 
-      hover:border-blue-400 dark:hover:border-blue-500 
-      transition-colors">
+        <div className="rounded p-6" style={{ backgroundColor: "var(--card)", border: "0.5px solid var(--border)" }}>
           <h3 className="text-lg font-semibold text-green-800 mb-2">Normal Traffic</h3>
           <div className="space-y-1 text-sm text-green-700">
             <p><span className="font-medium">Samples:</span> {normalData.length}</p>
@@ -116,12 +111,7 @@ export default function Analysis() {
           </div>
         </div>
         
-        <div className="bg-white/60 dark:bg-gray-800/60 
-      backdrop-blur-sm 
-      border border-gray-200 dark:border-gray-600 
-      rounded-lg p-5 
-      hover:border-blue-400 dark:hover:border-blue-500 
-      transition-colors">
+        <div className="rounded p-6" style={{ backgroundColor: "var(--card)", border: "0.5px solid var(--border)" }}>
           <h3 className="text-lg font-semibold text-red-800 mb-2">Malicious Traffic</h3>
           <div className="space-y-1 text-sm text-red-700">
             <p><span className="font-medium">Samples:</span> {attackData.length}</p>
@@ -134,12 +124,7 @@ export default function Analysis() {
       {/* Comparison Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Duration Comparison */}
-        <div className="bg-white/60 dark:bg-gray-800/60 
-      backdrop-blur-sm 
-      border border-gray-200 dark:border-gray-600 
-      rounded-lg p-5 
-      hover:border-blue-400 dark:hover:border-blue-500 
-      transition-colors">
+        <div className="rounded p-6" style={{ backgroundColor: "var(--card)", border: "0.5px solid var(--border)" }}>
           <h2 className="text-xl font-semibold mb-4 text-white-800">Flow Duration</h2>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={durationComparison}>
@@ -157,12 +142,7 @@ export default function Analysis() {
         </div>
         
         {/* Packets per Second Comparison */}
-        <div className="bg-white/60 dark:bg-gray-800/60 
-      backdrop-blur-sm 
-      border border-gray-200 dark:border-gray-600 
-      rounded-lg p-5 
-      hover:border-blue-400 dark:hover:border-blue-500 
-      transition-colors">
+        <div className="rounded p-6" style={{ backgroundColor: "var(--card)", border: "0.5px solid var(--border)" }}>
           <h2 className="text-xl font-semibold mb-4 text-white-800">Packet Rate</h2>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={pktsComparison}>
@@ -180,12 +160,7 @@ export default function Analysis() {
         </div>
         
         {/* TCP Flags Comparison */}
-        <div className="bg-white/60 dark:bg-gray-800/60 
-      backdrop-blur-sm 
-      border border-gray-200 dark:border-gray-600 
-      rounded-lg p-5 
-      hover:border-blue-400 dark:hover:border-blue-500 
-      transition-colors">
+        <div className="rounded p-6" style={{ backgroundColor: "var(--card)", border: "0.5px solid var(--border)" }}>
           <h2 className="text-xl font-semibold mb-4 text-white-800">TCP Flags Patterns</h2>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={flagsComparison}>
@@ -201,12 +176,7 @@ export default function Analysis() {
         </div>
         
         {/* Down/Up Ratio */}
-        <div className="bg-white/60 dark:bg-gray-800/60 
-      backdrop-blur-sm 
-      border border-gray-200 dark:border-gray-600 
-      rounded-lg p-5 
-      hover:border-blue-400 dark:hover:border-blue-500 
-      transition-colors">
+        <div className="rounded p-6" style={{ backgroundColor: "var(--card)", border: "0.5px solid var(--border)" }}>
           <h2 className="text-xl font-semibold mb-4 text-white-800">Down/Up Ratio</h2>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={ratioComparison}>
@@ -227,12 +197,7 @@ export default function Analysis() {
       {/* Large Charts */}
       <div className="space-y-6">
         {/* Scatter Plot */}
-        <div className="bg-white/60 dark:bg-gray-800/60 
-      backdrop-blur-sm 
-      border border-gray-200 dark:border-gray-600 
-      rounded-lg p-5 
-      hover:border-blue-400 dark:hover:border-blue-500 
-      transition-colors">
+        <div className="rounded p-6" style={{ backgroundColor: "var(--card)", border: "0.5px solid var(--border)" }}>
           <h2 className="text-xl font-semibold mb-4 text-white-800">Packets vs Duration (Colored by Type)</h2>
           <ResponsiveContainer width="100%" height={400}>
             <ScatterChart>
@@ -260,12 +225,7 @@ export default function Analysis() {
         </div>
         
         {/* Payload Comparison */}
-        <div className="bg-white/60 dark:bg-gray-800/60 
-      backdrop-blur-sm 
-      border border-gray-200 dark:border-gray-600 
-      rounded-lg p-5 
-      hover:border-blue-400 dark:hover:border-blue-500 
-      transition-colors">
+        <div className="rounded p-6" style={{ backgroundColor: "var(--card)", border: "0.5px solid var(--border)" }}>
           <h2 className="text-xl font-semibold mb-4 text-white-800">Payload Bytes per Second</h2>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={payloadComparison}>
