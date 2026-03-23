@@ -120,11 +120,11 @@ export default function App() {
           </div>
         </nav>
 
-        {/* Footer sidebar */}
-        <div className="p-3 flex justify-center" style={{ borderTop: "0.5px solid #2A2A35" }}>
-          {/* <p className="text-xs text-center" style={{ color: "#4A4A5A" }}>
-            Velocity TDIR · v2.1
-          </p> */}
+        {/* Footer sidebar 123*/}
+        <div className="p-3 flex flex-col items-center gap-2" style={{ borderTop: "0.5px solid #2A2A35" }}>
+          <p className="text-xs text-center" style={{ color: "#4A4A5A" }}>
+            The X-Stack v.1.0
+          </p>
           <button
             onClick={() => setIsDark(!isDark)}
             className="flex items-center rounded-full transition-all duration-300 overflow-hidden"
@@ -200,14 +200,13 @@ export default function App() {
 
         {/* Footer */}
         <footer
-          className="px-6 py-4 text-center text-xs"
+          className="px-6 py-4 text-center text-xs text-muted-foreground"
           style={{
             borderTop: "0.5px solid #2A2A35",
-            color: "#4A4A5A",
           }}
         >
-          <span style={{ color: "#238ab6" }}>IoT Security Analytics Platform · Machine Learning for Attack Detection ·</span>
-          <span style={{ color: "#3b90db" }}>Simulated data for demonstration</span>
+          IoT Security Analytics Platform · Machine Learning for Attack Detection ·{" "}
+          <span className = "text-muted-foreground">Simulated data for demonstration</span>
         </footer>
       </main>
     </div>
