@@ -3,7 +3,7 @@ import { NetworkFlow } from '../types';
 import { generateMockDataset } from '../mockData';
 import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
 
-const COLORS = ['#10b981', '#ef4444'];
+const COLORS = ["#4CAF6E", "#E8383A"];
 
 export default function Analysis() {
   const [dataset] = useState<NetworkFlow[]>(() => generateMockDataset(800));
@@ -125,13 +125,28 @@ export default function Analysis() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Duration Comparison */}
         <div className="rounded p-6" style={{ backgroundColor: "var(--card)", border: "0.5px solid var(--border)" }}>
-          <h2 className="text-xl font-semibold mb-4 text-white-800">Flow Duration</h2>
+          <h2 
+            className="text-xs font-medium tracking-widest uppercase mb-4"
+            style={{ color: '#8A8A9A' }}
+          >
+            Flow Duration
+          </h2>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={durationComparison}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="category" stroke="#6b7280" />
-              <YAxis stroke="#eff4ffe8" label={{ value: 'Seconds', angle: -90, position: 'insideLeft', fill: '#fdfeff' }} />
-              <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', color: '#1f2937' }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#2A2A35"  />
+              <XAxis dataKey="category" stroke="#4A4A5A" tick={{ fill: '#8A8A9A', fontSize: 12 }} />
+              <YAxis stroke="#4A4A5A" label={{ value: 'Seconds', angle: -90, position: 'insideLeft', fill: '#8A8A9A' }} tick={{ fill: '#8A8A9A', fontSize: 12 }} />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: 'var(--card)', 
+                  border: '1px solid var(--border)', 
+                  borderRadius: '4px', 
+                  color: 'var(--muted-foreground)' ,
+                  fontSize: 12,
+                }} 
+                labelStyle={{ color: 'var(--foreground)' }}
+                itemStyle={{ color: 'var(--muted-foreground)' }}
+              />
               <Bar dataKey="avgDuration" name="Average Duration (s)">
                 {durationComparison.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index]} />
@@ -143,13 +158,28 @@ export default function Analysis() {
         
         {/* Packets per Second Comparison */}
         <div className="rounded p-6" style={{ backgroundColor: "var(--card)", border: "0.5px solid var(--border)" }}>
-          <h2 className="text-xl font-semibold mb-4 text-white-800">Packet Rate</h2>
+          <h2 
+            className="text-xs font-medium tracking-widest uppercase mb-4"
+            style={{ color: '#8A8A9A' }}
+          >
+            Packet Rate
+          </h2>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={pktsComparison}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f5f9f7" />
-              <XAxis dataKey="category" stroke="#78847b" />
-              <YAxis stroke="#f2f9f2" width={80}  label={{ value: 'Packets/s', angle: -90, position: 'insideLeft', fill: '#f1f3f7' }} />
-              <Tooltip contentStyle={{ backgroundColor: '#ebefeb', border: '1px solid #e7ece4', borderRadius: '8px', color: '#291f44' }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#2A2A35" />
+              <XAxis dataKey="category" stroke="#4A4A5A" tick={{ fill: '#8A8A9A', fontSize: 12 }} />
+              <YAxis stroke="#4A4A5A" width={80}  label={{ value: 'Packets/s', angle: -90, position: 'insideLeft', fill: '#8A8A9A' }} tick={{ fill: '#8A8A9A', fontSize: 12 }} />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: 'var(--card)', 
+                  border: '1px solid var(--border)', 
+                  borderRadius: '4px', 
+                  color: 'var(--muted-foreground)',
+                  fontSize: 12,
+                }} 
+                labelStyle={{ color: 'var(--foreground)' }}
+                itemStyle={{ color: 'var(--muted-foreground)' }}
+              />
               <Bar dataKey="avgPkts" name="Average Packets/s">
                 {pktsComparison.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index]} />
@@ -161,14 +191,27 @@ export default function Analysis() {
         
         {/* TCP Flags Comparison */}
         <div className="rounded p-6" style={{ backgroundColor: "var(--card)", border: "0.5px solid var(--border)" }}>
-          <h2 className="text-xl font-semibold mb-4 text-white-800">TCP Flags Patterns</h2>
+          <h2 
+            className="text-xs font-medium tracking-widest uppercase mb-4"
+            style={{ color: '#8A8A9A' }}
+          >
+            TCP Flags Patterns
+          </h2>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={flagsComparison}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="flag" stroke="#6b7280" />
-              <YAxis stroke="#6b7280" width={70}  label={{ value: 'Count', angle: -90, position: 'insideLeft', fill: '#e7e9ed' }}  />
-              <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', color: '#1f2937' }} />
-              <Legend wrapperStyle={{ color: '#1f2937' }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#2A2A35" />
+              <XAxis dataKey="flag" stroke="#4A4A5A" tick={{ fill: '#8A8A9A', fontSize: 12 }}/>
+              <YAxis stroke="#4A4A5A" width={70}  label={{ value: 'Count', angle: -90, position: 'insideLeft', fill: '#8A8A9A' }} tick={{ fill: '#8A8A9A', fontSize: 12 }}  />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: 'var(--card)', 
+                  border: '1px solid var(--border)', 
+                  borderRadius: '4px', 
+                  color: 'var(--muted-foreground)',
+                  fontSize: 12,
+                }} 
+              />
+              <Legend wrapperStyle={{ color: 'var(--muted-foreground)', fontSize: 12 }} />
               <Bar dataKey="Normal" fill="#10b981" />
               <Bar dataKey="Attack" fill="#ef4444" />
             </BarChart>
@@ -177,13 +220,28 @@ export default function Analysis() {
         
         {/* Down/Up Ratio */}
         <div className="rounded p-6" style={{ backgroundColor: "var(--card)", border: "0.5px solid var(--border)" }}>
-          <h2 className="text-xl font-semibold mb-4 text-white-800">Down/Up Ratio</h2>
+          <h2 
+            className="text-xs font-medium tracking-widest uppercase mb-4"
+            style={{ color: '#8A8A9A' }}
+          >
+            Down/Up Ratio
+          </h2>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={ratioComparison}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="category" stroke="#6b7280" />
-              <YAxis stroke="#6b7280" label={{ value: 'Ratio', angle: -90, position: 'insideLeft', fill: '#f5f7fb' }} />
-              <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', color: '#1f2937' }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#2A2A35" />
+              <XAxis dataKey="category" stroke="#4A4A5A" tick={{ fill: '#8A8A9A', fontSize: 12 }} />
+              <YAxis stroke="#4A4A5A" label={{ value: 'Ratio', angle: -90, position: 'insideLeft', fill: '#8A8A9A' }} tick={{ fill: '#8A8A9A', fontSize: 12 }} />
+              <Tooltip 
+                contentStyle={{ 
+                    backgroundColor: 'var(--card)', 
+                    border: '1px solid var(--border)', 
+                    borderRadius: '4px', 
+                    color: 'var(--muted-foreground)', 
+                    fontSize: 12 
+                }}  
+                labelStyle={{ color: 'var(--foreground)' }}
+                itemStyle={{ color: 'var(--muted-foreground)' }}
+              />
               <Bar dataKey="avgRatio" name="Down/Up Ratio">
                 {ratioComparison.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index]} />
@@ -198,26 +256,39 @@ export default function Analysis() {
       <div className="space-y-6">
         {/* Scatter Plot */}
         <div className="rounded p-6" style={{ backgroundColor: "var(--card)", border: "0.5px solid var(--border)" }}>
-          <h2 className="text-xl font-semibold mb-4 text-white-800">Packets vs Duration (Colored by Type)</h2>
+          <h2 
+            className="text-xs font-medium tracking-widest uppercase mb-4"
+            style={{ color: '#8A8A9A' }}
+          >
+            Packets vs Duration (Colored by Type)
+          </h2>
           <ResponsiveContainer width="100%" height={400}>
             <ScatterChart>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="duration" name="Duration" unit="s" stroke="#6b7280" height={50} label={{ value: 'Duration (s)', position: 'insideBottom', offset: -5, fill: '#ebeef3' }} />
-              <YAxis dataKey="packets" name="Packets" stroke="#6b7280" width={80} label={{ value: 'Total Packets', angle: -90, position: 'insideLeft', fill: '#f5f7fb' }} />
-              <Tooltip cursor={{ strokeDasharray: '3 3' }} content={({ payload }) => {
+              <CartesianGrid strokeDasharray="3 3" stroke="#2A2A35" />
+              <XAxis dataKey="duration" name="Duration" unit="s" stroke="#4A4A5A" height={50} label={{ value: 'Duration (s)', position: 'insideBottom', offset: 5, fill: '#8A8A9A', fontSize: 12 }} tick={{ fill: '#8A8A9A', fontSize: 12 }} />
+              <YAxis dataKey="packets" name="Packets" stroke="#4A4A5A" width={80} label={{ value: 'Total Packets', angle: -90, position: 'insideLeft', fill: '#8A8A9A' }} tick={{ fill: '#8A8A9A', fontSize: 12 }}/>
+              <Tooltip 
+                cursor={{ strokeDasharray: '3 3' }} content={({ payload }) => {
                 if (payload && payload.length > 0) {
                   const data = payload[0].payload as any;
                   return (
-                    <div className="bg-white p-3 border border-gray-300 rounded shadow-lg">
-                      <p className="font-semibold text-gray-800">{data.name}</p>
-                      <p className="text-sm text-gray-700">Duration: {data.duration.toFixed(2)}s</p>
-                      <p className="text-sm text-gray-700">Packets: {data.packets}</p>
+                    <div style={{
+                      backgroundColor: 'var(--card)',
+                      border: '0.5px solid var(--border)',
+                      borderRadius: '4px',
+                      fontSize: 12,
+                      padding: '8px 12px',
+                      color: 'var(--muted-foreground)',
+                    }}>
+                      <p className="font-semibold">{data.name}</p>
+                      <p>Duration: {data.duration.toFixed(2)}s</p>
+                      <p>Packets: {data.packets}</p>
                     </div>
                   );
                 }
                 return null;
               }} />
-              <Legend wrapperStyle={{ color: '#1f2937' }} />
+              <Legend wrapperStyle={{ color: '#8A8A9A', fontSize: 12 }} />
               <Scatter name="Normal" data={scatterData.filter(d => d.type === 0)} fill="#10b981" />
               <Scatter name="Attack" data={scatterData.filter(d => d.type === 1)} fill="#ef4444" />
             </ScatterChart>
@@ -226,13 +297,28 @@ export default function Analysis() {
         
         {/* Payload Comparison */}
         <div className="rounded p-6" style={{ backgroundColor: "var(--card)", border: "0.5px solid var(--border)" }}>
-          <h2 className="text-xl font-semibold mb-4 text-white-800">Payload Bytes per Second</h2>
+          <h2 
+            className="text-xs font-medium tracking-widest uppercase mb-4"
+            style={{ color: '#8A8A9A' }}
+          >
+            Payload Bytes per Second
+          </h2>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={payloadComparison}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="category" stroke="#6b7280" />
-              <YAxis stroke="#6b7280" width={80} label={{ value: 'Bytes/s', angle: -90, position: 'insideLeft', fill: '#f7f8fb' }} />
-              <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', color: '#1f2937' }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#2A2A35"/>
+              <XAxis dataKey="category" stroke="#4A4A5A" tick={{ fill: '#8A8A9A', fontSize: 12 }} />
+              <YAxis stroke="#6b7280" width={80} label={{ value: 'Bytes/s', angle: -90, position: 'insideLeft', fill: '#8A8A9A' }} tick={{ fill: '#8A8A9A', fontSize: 12 }}  />
+              <Tooltip 
+                contentStyle={{ 
+                    backgroundColor: 'var(--card)', 
+                  border: '1px solid var(--border)', 
+                  borderRadius: '4px', 
+                  color: 'var(--muted-foreground)' ,
+                  fontSize: 12,
+                }} 
+                labelStyle={{ color: 'var(--foreground)' }}
+                itemStyle={{ color: 'var(--muted-foreground)' }}
+              />
               <Bar dataKey="avgPayload" name="Average Payload (Bytes/s)">
                 {payloadComparison.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index]} />

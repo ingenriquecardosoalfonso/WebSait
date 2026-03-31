@@ -80,7 +80,9 @@ export default function DataExplorer() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-semibold tracking-wide text-foreground">Data Explorer</h1>
+          <h1 className="text-2xl font-semibold tracking-wide text-foreground">
+            Data Explorer
+          </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Explore and filter network flow dataset
           </p>

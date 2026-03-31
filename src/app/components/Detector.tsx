@@ -147,7 +147,7 @@ export default function Detector() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-semibold tracking-wide text-foreground">
-          AI ATTACK DETECTION ENGINE
+          AI Detector
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Enter network flow characteristics to detect potential attacks
