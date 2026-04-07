@@ -2,26 +2,50 @@ import { useState } from 'react';
 import { Shield, AlertTriangle, CheckCircle, Activity, Upload, FileSpreadsheet } from 'lucide-react';
 
 const PROTOCOLS = ['tcp', 'udp', 'icmp'];
-const ATTACK_TYPES = ['Normal', 'DDoS', 'DoS', 'Reconnaissance', 'Theft', 'Mirai'];
 const ML_MODELS = ['Random Forest', 'Neural Network', 'XGBoost', 'SVM', 'Decision Tree'];
 
-export default function Detector() {
-  const [formData, setFormData] = useState({
-    proto: 'tcp',
-    flow_duration: '10',
-    fwd_pkts_tot: '50',
-    bwd_pkts_tot: '40',
-    flow_pkts_per_sec: '9',
-    payload_bytes_per_second: '2500',
-    flow_SYN_flag_count: '2',
-    flow_ACK_flag_count: '45',
-    flow_RST_flag_count: '0',
-    flow_FIN_flag_count: '1',
-  });
+const createInitialFormData = () => ({
+  proto: 'tcp',
+  service: 'Unidentified',
+  flow_duration: '0',
+  fwd_pkts_tot: '0',
+  bwd_pkts_tot: '0',
+  flow_pkts_per_sec: '0',
+  down_up_ratio: '0',
+  flow_FIN_flag_count: '0',
+  flow_SYN_flag_count: '0',
+  flow_RST_flag_count: '0',
+  flow_ACK_flag_count: '0',
+  'fwd_pkts_payload.avg': '0',
+  'bwd_pkts_payload.avg': '0',
+  'fwd_pkts_payload.tot': '0',
+  'fwd_pkts_payload.min': '0',
+  'flow_pkts_payload.avg': '0',
+  'flow_pkts_payload.std': '0',
+  'fwd_iat.avg': '0',
+  'bwd_iat.avg': '0',
+  'flow_iat.avg': '0',
+  fwd_init_window_size: '0',
+  bwd_init_window_size: '0',
+  fwd_last_window_size: '0',
+  payload_bytes_per_second: '0',
+  fwd_subflow_bytes: '0',
+  fwd_header_size_tot: '0',
+  'active.avg': '0',
+  'active.tot': '0',
+  'active.min': '0',
+  'id.resp_p': '0',
+  bwd_pkts_per_sec: '0',
+});
 
+type FormDataType = ReturnType<typeof createInitialFormData>;
+
+export default function Detector() {
+  const [formData, setFormData] = useState<FormDataType>(createInitialFormData());
   const [selectedModel, setSelectedModel] = useState('Random Forest');
   const [excelData, setExcelData] = useState('');
   const [showExcelImport, setShowExcelImport] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   const [prediction, setPrediction] = useState<{
     type: string;
@@ -30,11 +54,40 @@ export default function Detector() {
     topFeatures: { name: string; impact: string }[];
   } | null>(null);
 
+  const parseCSVLine = (line: string) => {
+    const values: string[] = [];
+    let current = '';
+    let insideQuotes = false;
+
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      const nextChar = line[i + 1];
+
+      if (char === '"') {
+        if (insideQuotes && nextChar === '"') {
+          current += '"';
+          i++;
+        } else {
+          insideQuotes = !insideQuotes;
+        }
+      } else if (char === ',' && !insideQuotes) {
+        values.push(current.trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+
+    values.push(current.trim());
+    return values;
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
+    setSuccessMessage('');
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -45,6 +98,7 @@ export default function Detector() {
         const text = event.target?.result as string;
         setExcelData(text);
         setShowExcelImport(true);
+        setSuccessMessage('');
       };
       reader.readAsText(file);
     }
@@ -52,23 +106,60 @@ export default function Detector() {
 
   const handleImportData = () => {
     try {
-      const lines = excelData.trim().split('\n');
+      const lines = excelData
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0);
+
       if (lines.length > 1) {
-        const values = lines[1].split(',');
+        const headers = parseCSVLine(lines[0]);
+        const values = parseCSVLine(lines[1]);
+
+        const getValue = (column: keyof FormDataType) => {
+          const index = headers.indexOf(column);
+          if (index !== -1 && values[index] !== undefined && values[index] !== '') {
+            return values[index];
+          }
+          return formData[column];
+        };
+
         setFormData({
-          proto: values[0] || formData.proto,
-          flow_duration: values[1] || formData.flow_duration,
-          fwd_pkts_tot: values[2] || formData.fwd_pkts_tot,
-          bwd_pkts_tot: values[3] || formData.bwd_pkts_tot,
-          flow_pkts_per_sec: values[4] || formData.flow_pkts_per_sec,
-          payload_bytes_per_second: values[5] || formData.payload_bytes_per_second,
-          flow_SYN_flag_count: values[6] || formData.flow_SYN_flag_count,
-          flow_ACK_flag_count: values[7] || formData.flow_ACK_flag_count,
-          flow_RST_flag_count: values[8] || formData.flow_RST_flag_count,
-          flow_FIN_flag_count: values[9] || formData.flow_FIN_flag_count,
+          proto: getValue('proto'),
+          service: getValue('service'),
+          flow_duration: getValue('flow_duration'),
+          fwd_pkts_tot: getValue('fwd_pkts_tot'),
+          bwd_pkts_tot: getValue('bwd_pkts_tot'),
+          flow_pkts_per_sec: getValue('flow_pkts_per_sec'),
+          down_up_ratio: getValue('down_up_ratio'),
+          flow_FIN_flag_count: getValue('flow_FIN_flag_count'),
+          flow_SYN_flag_count: getValue('flow_SYN_flag_count'),
+          flow_RST_flag_count: getValue('flow_RST_flag_count'),
+          flow_ACK_flag_count: getValue('flow_ACK_flag_count'),
+          'fwd_pkts_payload.avg': getValue('fwd_pkts_payload.avg'),
+          'bwd_pkts_payload.avg': getValue('bwd_pkts_payload.avg'),
+          'fwd_pkts_payload.tot': getValue('fwd_pkts_payload.tot'),
+          'fwd_pkts_payload.min': getValue('fwd_pkts_payload.min'),
+          'flow_pkts_payload.avg': getValue('flow_pkts_payload.avg'),
+          'flow_pkts_payload.std': getValue('flow_pkts_payload.std'),
+          'fwd_iat.avg': getValue('fwd_iat.avg'),
+          'bwd_iat.avg': getValue('bwd_iat.avg'),
+          'flow_iat.avg': getValue('flow_iat.avg'),
+          fwd_init_window_size: getValue('fwd_init_window_size'),
+          bwd_init_window_size: getValue('bwd_init_window_size'),
+          fwd_last_window_size: getValue('fwd_last_window_size'),
+          payload_bytes_per_second: getValue('payload_bytes_per_second'),
+          fwd_subflow_bytes: getValue('fwd_subflow_bytes'),
+          fwd_header_size_tot: getValue('fwd_header_size_tot'),
+          'active.avg': getValue('active.avg'),
+          'active.tot': getValue('active.tot'),
+          'active.min': getValue('active.min'),
+          'id.resp_p': getValue('id.resp_p'),
+          bwd_pkts_per_sec: getValue('bwd_pkts_per_sec'),
         });
+
         setShowExcelImport(false);
         setExcelData('');
+        setSuccessMessage('File imported and data filled successfully.');
       }
     } catch (error) {
       console.error('Error parsing data:', error);
@@ -144,7 +235,6 @@ export default function Detector() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
         <h1 className="text-2xl font-semibold tracking-wide text-foreground">
           AI Detector
@@ -155,7 +245,6 @@ export default function Detector() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Input Form */}
         <div
           className="rounded p-6"
           style={{ backgroundColor: 'var(--card)', border: '0.5px solid var(--border)' }}
@@ -167,16 +256,15 @@ export default function Detector() {
             Flow Characteristics
           </h2>
 
-          {/* Excel Upload Section */}
           <div className="mb-6 pb-4" style={{ borderBottom: '0.5px solid var(--border)' }}>
             <label className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
-              Import from Excel
+              Import from CSV
             </label>
 
             <div className="flex gap-2">
               <input
                 type="file"
-                accept=".csv,.xlsx"
+                accept=".csv"
                 onChange={handleFileUpload}
                 className="hidden"
                 id="excel-upload"
@@ -216,6 +304,12 @@ export default function Detector() {
                 ✓ File loaded. Click "Import" to paste values.
               </p>
             )}
+
+            {successMessage && (
+              <p className="text-xs mt-2" style={{ color: '#4CAF6E' }}>
+                ✓ {successMessage}
+              </p>
+            )}
           </div>
 
           <div className="space-y-4">
@@ -230,12 +324,26 @@ export default function Detector() {
                 className="w-full p-2 rounded-lg"
                 style={inputStyle}
               >
-                {PROTOCOLS.map(proto => (
+                {PROTOCOLS.map((proto) => (
                   <option key={proto} value={proto}>
                     {proto.toUpperCase()}
                   </option>
                 ))}
               </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--foreground)' }}>
+                Service
+              </label>
+              <input
+                type="text"
+                name="service"
+                value={formData.service}
+                onChange={handleInputChange}
+                className="w-full p-2 rounded-lg"
+                style={inputStyle}
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -245,6 +353,7 @@ export default function Detector() {
                 </label>
                 <input
                   type="number"
+                  step="any"
                   name="flow_duration"
                   value={formData.flow_duration}
                   onChange={handleInputChange}
@@ -259,6 +368,7 @@ export default function Detector() {
                 </label>
                 <input
                   type="number"
+                  step="any"
                   name="flow_pkts_per_sec"
                   value={formData.flow_pkts_per_sec}
                   onChange={handleInputChange}
@@ -275,6 +385,7 @@ export default function Detector() {
                 </label>
                 <input
                   type="number"
+                  step="any"
                   name="fwd_pkts_tot"
                   value={formData.fwd_pkts_tot}
                   onChange={handleInputChange}
@@ -289,6 +400,7 @@ export default function Detector() {
                 </label>
                 <input
                   type="number"
+                  step="any"
                   name="bwd_pkts_tot"
                   value={formData.bwd_pkts_tot}
                   onChange={handleInputChange}
@@ -304,12 +416,45 @@ export default function Detector() {
               </label>
               <input
                 type="number"
+                step="any"
                 name="payload_bytes_per_second"
                 value={formData.payload_bytes_per_second}
                 onChange={handleInputChange}
                 className="w-full p-2 rounded-lg"
                 style={inputStyle}
               />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--foreground)' }}>
+                  Down/Up Ratio
+                </label>
+                <input
+                  type="number"
+                  step="any"
+                  name="down_up_ratio"
+                  value={formData.down_up_ratio}
+                  onChange={handleInputChange}
+                  className="w-full p-2 rounded-lg"
+                  style={inputStyle}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--foreground)' }}>
+                  Backward Packets/sec
+                </label>
+                <input
+                  type="number"
+                  step="any"
+                  name="bwd_pkts_per_sec"
+                  value={formData.bwd_pkts_per_sec}
+                  onChange={handleInputChange}
+                  className="w-full p-2 rounded-lg"
+                  style={inputStyle}
+                />
+              </div>
             </div>
 
             <div className="pt-4" style={{ borderTop: '0.5px solid var(--border)' }}>
@@ -324,6 +469,7 @@ export default function Detector() {
                   </label>
                   <input
                     type="number"
+                    step="any"
                     name="flow_SYN_flag_count"
                     value={formData.flow_SYN_flag_count}
                     onChange={handleInputChange}
@@ -338,6 +484,7 @@ export default function Detector() {
                   </label>
                   <input
                     type="number"
+                    step="any"
                     name="flow_ACK_flag_count"
                     value={formData.flow_ACK_flag_count}
                     onChange={handleInputChange}
@@ -352,6 +499,7 @@ export default function Detector() {
                   </label>
                   <input
                     type="number"
+                    step="any"
                     name="flow_RST_flag_count"
                     value={formData.flow_RST_flag_count}
                     onChange={handleInputChange}
@@ -366,8 +514,319 @@ export default function Detector() {
                   </label>
                   <input
                     type="number"
+                    step="any"
                     name="flow_FIN_flag_count"
                     value={formData.flow_FIN_flag_count}
+                    onChange={handleInputChange}
+                    className="w-full p-2 rounded-lg"
+                    style={inputStyle}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-4" style={{ borderTop: '0.5px solid var(--border)' }}>
+              <p className="text-sm font-medium mb-3" style={{ color: 'var(--foreground)' }}>
+                Payload Metrics
+              </p>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs mb-1" style={{ color: 'var(--vt-text-muted)' }}>
+                    Fwd Payload Avg
+                  </label>
+                  <input
+                    type="number"
+                    step="any"
+                    name="fwd_pkts_payload.avg"
+                    value={formData['fwd_pkts_payload.avg']}
+                    onChange={handleInputChange}
+                    className="w-full p-2 rounded-lg"
+                    style={inputStyle}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs mb-1" style={{ color: 'var(--vt-text-muted)' }}>
+                    Bwd Payload Avg
+                  </label>
+                  <input
+                    type="number"
+                    step="any"
+                    name="bwd_pkts_payload.avg"
+                    value={formData['bwd_pkts_payload.avg']}
+                    onChange={handleInputChange}
+                    className="w-full p-2 rounded-lg"
+                    style={inputStyle}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs mb-1" style={{ color: 'var(--vt-text-muted)' }}>
+                    Fwd Payload Total
+                  </label>
+                  <input
+                    type="number"
+                    step="any"
+                    name="fwd_pkts_payload.tot"
+                    value={formData['fwd_pkts_payload.tot']}
+                    onChange={handleInputChange}
+                    className="w-full p-2 rounded-lg"
+                    style={inputStyle}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs mb-1" style={{ color: 'var(--vt-text-muted)' }}>
+                    Fwd Payload Min
+                  </label>
+                  <input
+                    type="number"
+                    step="any"
+                    name="fwd_pkts_payload.min"
+                    value={formData['fwd_pkts_payload.min']}
+                    onChange={handleInputChange}
+                    className="w-full p-2 rounded-lg"
+                    style={inputStyle}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs mb-1" style={{ color: 'var(--vt-text-muted)' }}>
+                    Flow Payload Avg
+                  </label>
+                  <input
+                    type="number"
+                    step="any"
+                    name="flow_pkts_payload.avg"
+                    value={formData['flow_pkts_payload.avg']}
+                    onChange={handleInputChange}
+                    className="w-full p-2 rounded-lg"
+                    style={inputStyle}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs mb-1" style={{ color: 'var(--vt-text-muted)' }}>
+                    Flow Payload Std
+                  </label>
+                  <input
+                    type="number"
+                    step="any"
+                    name="flow_pkts_payload.std"
+                    value={formData['flow_pkts_payload.std']}
+                    onChange={handleInputChange}
+                    className="w-full p-2 rounded-lg"
+                    style={inputStyle}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-4" style={{ borderTop: '0.5px solid var(--border)' }}>
+              <p className="text-sm font-medium mb-3" style={{ color: 'var(--foreground)' }}>
+                Timing Metrics
+              </p>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs mb-1" style={{ color: 'var(--vt-text-muted)' }}>
+                    Fwd IAT Avg
+                  </label>
+                  <input
+                    type="number"
+                    step="any"
+                    name="fwd_iat.avg"
+                    value={formData['fwd_iat.avg']}
+                    onChange={handleInputChange}
+                    className="w-full p-2 rounded-lg"
+                    style={inputStyle}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs mb-1" style={{ color: 'var(--vt-text-muted)' }}>
+                    Bwd IAT Avg
+                  </label>
+                  <input
+                    type="number"
+                    step="any"
+                    name="bwd_iat.avg"
+                    value={formData['bwd_iat.avg']}
+                    onChange={handleInputChange}
+                    className="w-full p-2 rounded-lg"
+                    style={inputStyle}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs mb-1" style={{ color: 'var(--vt-text-muted)' }}>
+                    Flow IAT Avg
+                  </label>
+                  <input
+                    type="number"
+                    step="any"
+                    name="flow_iat.avg"
+                    value={formData['flow_iat.avg']}
+                    onChange={handleInputChange}
+                    className="w-full p-2 rounded-lg"
+                    style={inputStyle}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-4" style={{ borderTop: '0.5px solid var(--border)' }}>
+              <p className="text-sm font-medium mb-3" style={{ color: 'var(--foreground)' }}>
+                Window Metrics
+              </p>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs mb-1" style={{ color: 'var(--vt-text-muted)' }}>
+                    Fwd Init Window Size
+                  </label>
+                  <input
+                    type="number"
+                    step="any"
+                    name="fwd_init_window_size"
+                    value={formData.fwd_init_window_size}
+                    onChange={handleInputChange}
+                    className="w-full p-2 rounded-lg"
+                    style={inputStyle}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs mb-1" style={{ color: 'var(--vt-text-muted)' }}>
+                    Bwd Init Window Size
+                  </label>
+                  <input
+                    type="number"
+                    step="any"
+                    name="bwd_init_window_size"
+                    value={formData.bwd_init_window_size}
+                    onChange={handleInputChange}
+                    className="w-full p-2 rounded-lg"
+                    style={inputStyle}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs mb-1" style={{ color: 'var(--vt-text-muted)' }}>
+                    Fwd Last Window Size
+                  </label>
+                  <input
+                    type="number"
+                    step="any"
+                    name="fwd_last_window_size"
+                    value={formData.fwd_last_window_size}
+                    onChange={handleInputChange}
+                    className="w-full p-2 rounded-lg"
+                    style={inputStyle}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-4" style={{ borderTop: '0.5px solid var(--border)' }}>
+              <p className="text-sm font-medium mb-3" style={{ color: 'var(--foreground)' }}>
+                Flow Activity
+              </p>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs mb-1" style={{ color: 'var(--vt-text-muted)' }}>
+                    Active Avg
+                  </label>
+                  <input
+                    type="number"
+                    step="any"
+                    name="active.avg"
+                    value={formData['active.avg']}
+                    onChange={handleInputChange}
+                    className="w-full p-2 rounded-lg"
+                    style={inputStyle}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs mb-1" style={{ color: 'var(--vt-text-muted)' }}>
+                    Active Total
+                  </label>
+                  <input
+                    type="number"
+                    step="any"
+                    name="active.tot"
+                    value={formData['active.tot']}
+                    onChange={handleInputChange}
+                    className="w-full p-2 rounded-lg"
+                    style={inputStyle}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs mb-1" style={{ color: 'var(--vt-text-muted)' }}>
+                    Active Min
+                  </label>
+                  <input
+                    type="number"
+                    step="any"
+                    name="active.min"
+                    value={formData['active.min']}
+                    onChange={handleInputChange}
+                    className="w-full p-2 rounded-lg"
+                    style={inputStyle}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-4" style={{ borderTop: '0.5px solid var(--border)' }}>
+              <p className="text-sm font-medium mb-3" style={{ color: 'var(--foreground)' }}>
+                Other Network Features
+              </p>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs mb-1" style={{ color: 'var(--vt-text-muted)' }}>
+                    Fwd Subflow Bytes
+                  </label>
+                  <input
+                    type="number"
+                    step="any"
+                    name="fwd_subflow_bytes"
+                    value={formData.fwd_subflow_bytes}
+                    onChange={handleInputChange}
+                    className="w-full p-2 rounded-lg"
+                    style={inputStyle}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs mb-1" style={{ color: 'var(--vt-text-muted)' }}>
+                    Fwd Header Size Total
+                  </label>
+                  <input
+                    type="number"
+                    step="any"
+                    name="fwd_header_size_tot"
+                    value={formData.fwd_header_size_tot}
+                    onChange={handleInputChange}
+                    className="w-full p-2 rounded-lg"
+                    style={inputStyle}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs mb-1" style={{ color: 'var(--vt-text-muted)' }}>
+                    Response Port
+                  </label>
+                  <input
+                    type="number"
+                    step="any"
+                    name="id.resp_p"
+                    value={formData['id.resp_p']}
                     onChange={handleInputChange}
                     className="w-full p-2 rounded-lg"
                     style={inputStyle}
@@ -383,7 +842,7 @@ export default function Detector() {
                 className="flex-1 p-2 rounded-lg"
                 style={inputStyle}
               >
-                {ML_MODELS.map(model => (
+                {ML_MODELS.map((model) => (
                   <option key={model} value={model}>
                     {model}
                   </option>
@@ -405,7 +864,6 @@ export default function Detector() {
           </div>
         </div>
 
-        {/* Results */}
         <div
           className="rounded p-6"
           style={{ backgroundColor: 'var(--card)', border: '0.5px solid var(--border)' }}
