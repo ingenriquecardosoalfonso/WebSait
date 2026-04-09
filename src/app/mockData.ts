@@ -1,4 +1,5 @@
 import { NetworkFlow } from './types';
+import { apiFetch } from '../services/apiService';
 
 const ATTACK_TYPES = ['Normal', 'DDoS', 'DoS', 'Reconnaissance', 'Theft', 'Mirai'];
 const PROTOCOLS: ('tcp' | 'udp' | 'icmp')[] = ['tcp', 'udp', 'icmp'];
@@ -85,13 +86,20 @@ export function generateMockFlow(id: number, attackType?: string): NetworkFlow {
   };
 }
 
-export function generateMockDataset(size: number = 1000): NetworkFlow[] {
+export async function generateMockDataset(): Promise<NetworkFlow[]> {
+  let size = 900; 
+  const datametrics = await apiFetch('/api/metrics/');
+  const datametricsrow = Array.isArray(datametrics) ? datametrics[0] : datametrics;
+    if (datametricsrow?.totalFlows && typeof datametricsrow.totalFlows === 'number') {
+      size = datametricsrow.totalFlows;
+    }
   const dataset: NetworkFlow[] = [];
-  
-  // 70% normal, 30% attacks
-  const normalCount = Math.floor(size * 0.7);
-  const attackCount = size - normalCount;
-  
+  interface Metric {  traffic_class: string; total_rows: number; percentage: number; }
+
+  const datagrouppercentage = await apiFetch('/api/metrics/groupPercentage');
+  const attackCount = (datagrouppercentage as Metric[]).find(l => l.traffic_class === 'Attack')?.total_rows ?? 0;
+  const normalCount = (datagrouppercentage as Metric[]).find(l => l.traffic_class === 'Normal')?.total_rows ?? 0;
+
   for (let i = 0; i < normalCount; i++) {
     dataset.push(generateMockFlow(i, 'Normal'));
   }
