@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { JSX, useState } from 'react';
 import { Shield, AlertTriangle, CheckCircle, Activity, Upload, FileSpreadsheet } from 'lucide-react';
 
 const PROTOCOLS = ['tcp', 'udp', 'icmp'];
-const ML_MODELS = ['Random Forest', 'Neural Network', 'XGBoost', 'SVM', 'Decision Tree'];
+const ML_MODELS = ['Random Forest', 'KNN', 'Decision Tree'];
 
 const createInitialFormData = () => ({
   proto: 'tcp',
@@ -46,6 +46,8 @@ export default function Detector() {
   const [excelData, setExcelData] = useState('');
   const [showExcelImport, setShowExcelImport] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [isDataOpen, setIsDataOpen] = useState(true);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const [prediction, setPrediction] = useState<{
     type: string;
@@ -88,6 +90,20 @@ export default function Detector() {
       [e.target.name]: e.target.value,
     });
     setSuccessMessage('');
+    
+    setFieldErrors((prev) => {
+    const updatedErrors = { ...prev };
+
+    if (e.target.value === '') {
+      updatedErrors[e.target.name] = 'This field is required.';
+    } else if (e.target instanceof HTMLInputElement && e.target.type === 'number' && Number(e.target.value) < 0) {
+      updatedErrors[e.target.name] = 'Negative values are not allowed.';
+    } else {
+      delete updatedErrors[e.target.name];
+    }
+
+    return updatedErrors;
+  });
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -165,46 +181,70 @@ export default function Detector() {
       console.error('Error parsing data:', error);
     }
   };
-
+  
   const detectAttack = () => {
-    const pktsPerSec = parseFloat(formData.flow_pkts_per_sec);
-    const synCount = parseFloat(formData.flow_SYN_flag_count);
-    const rstCount = parseFloat(formData.flow_RST_flag_count);
-    const payloadBytes = parseFloat(formData.payload_bytes_per_second);
+  const errors: Record<string, string> = {};
 
-    let predictedType = 'Normal';
-    let confidence = 0.92;
-    let riskLevel: 'low' | 'medium' | 'high' = 'low';
-
-    if (pktsPerSec > 500 || synCount > 20 || payloadBytes > 20000) {
-      predictedType = pktsPerSec > 1000 ? 'DDoS' : 'DoS';
-      confidence = 0.89;
-      riskLevel = 'high';
-    } else if (synCount > 10 && rstCount > 5) {
-      predictedType = 'Reconnaissance';
-      confidence = 0.85;
-      riskLevel = 'medium';
-    } else if (parseFloat(formData.flow_duration) > 100 && pktsPerSec > 100) {
-      predictedType = 'Mirai';
-      confidence = 0.87;
-      riskLevel = 'high';
+  Object.entries(formData).forEach(([key, value]) => {
+    if (value === '') {
+      errors[key] = 'This field is required.';
+      return;
     }
 
-    const topFeatures = [
-      { name: 'flow_pkts_per_sec', impact: pktsPerSec > 100 ? 'High' : 'Normal' },
-      { name: 'flow_SYN_flag_count', impact: synCount > 5 ? 'High' : 'Normal' },
-      { name: 'payload_bytes_per_second', impact: payloadBytes > 10000 ? 'High' : 'Normal' },
-    ];
+    if (key !== 'proto' && key !== 'service') {
+      const num = Number(value);
+      if (isNaN(num)) {
+        errors[key] = 'A numeric value is required.';
+      } else if (num < 0) {
+        errors[key] = 'Negative values are not allowed.';
+      }
+    }
+  });
 
-    setPrediction({
-      type: predictedType,
-      confidence,
-      riskLevel,
-      topFeatures,
-    });
-  };
+  setFieldErrors(errors);
 
-  const riskStyles = {
+  if (Object.keys(errors).length > 0) {
+    return;
+  }
+
+  const pktsPerSec = parseFloat(formData.flow_pkts_per_sec);
+  const synCount = parseFloat(formData.flow_SYN_flag_count);
+  const rstCount = parseFloat(formData.flow_RST_flag_count);
+  const payloadBytes = parseFloat(formData.payload_bytes_per_second);
+
+  let predictedType = 'Normal';
+  let confidence = 0.92;
+  let riskLevel: 'low' | 'medium' | 'high' = 'low';
+
+  if (pktsPerSec > 500 || synCount > 20 || payloadBytes > 20000) {
+    predictedType = pktsPerSec > 1000 ? 'DDoS' : 'DoS';
+    confidence = 0.89;
+    riskLevel = 'high';
+  } else if (synCount > 10 && rstCount > 5) {
+    predictedType = 'Reconnaissance';
+    confidence = 0.85;
+    riskLevel = 'medium';
+  } else if (parseFloat(formData.flow_duration) > 100 && pktsPerSec > 100) {
+    predictedType = 'Mirai';
+    confidence = 0.87;
+    riskLevel = 'high';
+  }
+
+  const topFeatures = [
+    { name: 'flow_pkts_per_sec', impact: pktsPerSec > 100 ? 'High' : 'Normal' },
+    { name: 'flow_SYN_flag_count', impact: synCount > 5 ? 'High' : 'Normal' },
+    { name: 'payload_bytes_per_second', impact: payloadBytes > 10000 ? 'High' : 'Normal' },
+  ];
+
+  setPrediction({
+    type: predictedType,
+    confidence,
+    riskLevel,
+    topFeatures,
+  });
+};
+
+  const riskStyles: Record<'low' | 'medium' | 'high', { bg: string; border: string; text: string; icon: JSX.Element }> = {
     low: {
       bg: 'rgba(76,175,110,0.08)',
       border: '#4CAF6E',
@@ -243,6 +283,7 @@ export default function Detector() {
           Enter network flow characteristics to detect potential attacks
         </p>
       </div>
+    
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div
@@ -258,7 +299,7 @@ export default function Detector() {
 
           <div className="mb-6 pb-4" style={{ borderBottom: '0.5px solid var(--border)' }}>
             <label className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
-              Import from CSV
+              Import CSV
             </label>
 
             <div className="flex gap-2">
@@ -313,6 +354,27 @@ export default function Detector() {
           </div>
 
           <div className="space-y-4">
+            <div
+  className="rounded-lg p-3"
+  style={{
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    border: '0.5px solid var(--border)',
+  }}
+>
+  <button
+    type="button"
+    onClick={() => setIsDataOpen(!isDataOpen)}
+    className="w-full flex items-center justify-between text-left"
+    style={{ color: 'var(--foreground)' }}
+  >
+    <span className="text-sm font-medium">Data</span>
+    <span className="text-xs" style={{ color: 'var(--vt-text-muted)' }}>
+      {isDataOpen ? '▲ Hide' : '▼ Show'}
+    </span>
+  </button>
+</div>
+{isDataOpen && (
+  <>
             <div>
               <label className="block text-sm font-medium mb-1" style={{ color: 'var(--foreground)' }}>
                 Protocol
@@ -322,8 +384,16 @@ export default function Detector() {
                 value={formData.proto}
                 onChange={handleInputChange}
                 className="w-full p-2 rounded-lg"
-                style={inputStyle}
-              >
+                style={{
+                    ...inputStyle,
+                    border: fieldErrors['proto'] ? '1px solid red' : '0.5px solid var(--border)',
+                    }}
+                    >
+                    {fieldErrors['proto'] && (
+                    <p className="text-xs mt-1" style={{ color: 'red' }}>
+                    {fieldErrors['proto']}
+                    </p>
+                    )}
                 {PROTOCOLS.map((proto) => (
                   <option key={proto} value={proto}>
                     {proto.toUpperCase()}
@@ -334,22 +404,39 @@ export default function Detector() {
 
             <div>
               <label className="block text-sm font-medium mb-1" style={{ color: 'var(--foreground)' }}>
-                Service
+                Service 
               </label>
-              <input
-                type="text"
+               <select
                 name="service"
                 value={formData.service}
                 onChange={handleInputChange}
                 className="w-full p-2 rounded-lg"
-                style={inputStyle}
-              />
+                style={{
+                 ...inputStyle,
+                 border: fieldErrors.service ? '1px solid red' : '0.5px solid var(--border)',
+                 }}
+                 >
+                 <option value="Unidentified">Unidentified</option>
+                 <option value="mqtt">mqtt</option>
+                 <option value="http">http</option>
+                 <option value="dns">dns</option>
+                 <option value="ntp">ntp</option>
+                 <option value="ssl">ssl</option>
+                 <option value="dhcp">dhcp</option>
+                 <option value="irc">irc</option>
+                 <option value="radius">radius</option>
+                 </select>
+                 {fieldErrors.service && (
+                 <p className="text-xs mt-1" style={{ color: 'red' }}>
+                {fieldErrors.service}
+                </p>
+             )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-1" style={{ color: 'var(--foreground)' }}>
-                  Duration (sec)
+                  Duration (sec) 
                 </label>
                 <input
                   type="number"
@@ -357,14 +444,24 @@ export default function Detector() {
                   name="flow_duration"
                   value={formData.flow_duration}
                   onChange={handleInputChange}
+                  required
+                  min="0"
                   className="w-full p-2 rounded-lg"
-                  style={inputStyle}
-                />
+                  style={{
+                    ...inputStyle,
+                    border: fieldErrors['flow_duration'] ? '1px solid red' : '0.5px solid var(--border)',
+                    }}
+                    />
+                    {fieldErrors['flow_duration'] && (
+                    <p className="text-xs mt-1" style={{ color: 'red' }}>
+                    {fieldErrors['flow_duration']}
+                    </p>
+                    )}
               </div>
 
               <div>
                 <label className="block text-sm font-medium mb-1" style={{ color: 'var(--foreground)' }}>
-                  Packets/sec
+                  Packets/sec 
                 </label>
                 <input
                   type="number"
@@ -372,16 +469,26 @@ export default function Detector() {
                   name="flow_pkts_per_sec"
                   value={formData.flow_pkts_per_sec}
                   onChange={handleInputChange}
+                  required
+                  min="0"
                   className="w-full p-2 rounded-lg"
-                  style={inputStyle}
-                />
+                  style={{
+                    ...inputStyle,
+                    border: fieldErrors['flow_pkts_per_sec'] ? '1px solid red' : '0.5px solid var(--border)',
+                    }}
+                    />
+                    {fieldErrors['flow_pkts_per_sec'] && (
+                    <p className="text-xs mt-1" style={{ color: 'red' }}>
+                    {fieldErrors['flow_pkts_per_sec']}
+                    </p>
+                    )}
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-1" style={{ color: 'var(--foreground)' }}>
-                  Forward Packets
+                  Forward Packets 
                 </label>
                 <input
                   type="number"
@@ -389,14 +496,24 @@ export default function Detector() {
                   name="fwd_pkts_tot"
                   value={formData.fwd_pkts_tot}
                   onChange={handleInputChange}
+                  required
+                  min="0"
                   className="w-full p-2 rounded-lg"
-                  style={inputStyle}
-                />
+                  style={{
+                    ...inputStyle,
+                    border: fieldErrors['fwd_pkts_tot'] ? '1px solid red' : '0.5px solid var(--border)',
+                    }}
+                    />
+                    {fieldErrors['fwd_pkts_tot'] && (
+                    <p className="text-xs mt-1" style={{ color: 'red' }}>
+                    {fieldErrors['fwd_pkts_tot']}
+                    </p>
+                    )}
               </div>
 
               <div>
                 <label className="block text-sm font-medium mb-1" style={{ color: 'var(--foreground)' }}>
-                  Backward Packets
+                  Backward Packets 
                 </label>
                 <input
                   type="number"
@@ -404,15 +521,25 @@ export default function Detector() {
                   name="bwd_pkts_tot"
                   value={formData.bwd_pkts_tot}
                   onChange={handleInputChange}
+                  required
+                  min="0"
                   className="w-full p-2 rounded-lg"
-                  style={inputStyle}
-                />
+                  style={{
+                    ...inputStyle,
+                    border: fieldErrors['bwd_pkts_tot'] ? '1px solid red' : '0.5px solid var(--border)',
+                    }}
+                    />
+                    {fieldErrors['bwd_pkts_tot'] && (
+                    <p className="text-xs mt-1" style={{ color: 'red' }}>
+                    {fieldErrors['bwd_pkts_tot']}
+                    </p>
+                    )}
               </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium mb-1" style={{ color: 'var(--foreground)' }}>
-                Payload Bytes/sec
+                Payload Bytes/sec 
               </label>
               <input
                 type="number"
@@ -420,15 +547,25 @@ export default function Detector() {
                 name="payload_bytes_per_second"
                 value={formData.payload_bytes_per_second}
                 onChange={handleInputChange}
+                required
+                min="0"
                 className="w-full p-2 rounded-lg"
-                style={inputStyle}
-              />
+                style={{
+                    ...inputStyle,
+                    border: fieldErrors['payload_bytes_per_second'] ? '1px solid red' : '0.5px solid var(--border)',
+                    }}
+                    />
+                    {fieldErrors['payload_bytes_per_second'] && (
+                    <p className="text-xs mt-1" style={{ color: 'red' }}>
+                    {fieldErrors['payload_bytes_per_second']}
+                    </p>
+                    )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-1" style={{ color: 'var(--foreground)' }}>
-                  Down/Up Ratio
+                  Down/Up Ratio 
                 </label>
                 <input
                   type="number"
@@ -436,14 +573,24 @@ export default function Detector() {
                   name="down_up_ratio"
                   value={formData.down_up_ratio}
                   onChange={handleInputChange}
+                  required
+                  min="0"
                   className="w-full p-2 rounded-lg"
-                  style={inputStyle}
-                />
+                  style={{
+                    ...inputStyle,
+                    border: fieldErrors['down_up_ratio'] ? '1px solid red' : '0.5px solid var(--border)',
+                    }}
+                    />
+                    {fieldErrors['down_up_ratio'] && (
+                    <p className="text-xs mt-1" style={{ color: 'red' }}>
+                    {fieldErrors['down_up_ratio']}
+                    </p>
+                    )}
               </div>
 
               <div>
                 <label className="block text-sm font-medium mb-1" style={{ color: 'var(--foreground)' }}>
-                  Backward Packets/sec
+                  Backward Packets/sec 
                 </label>
                 <input
                   type="number"
@@ -451,15 +598,25 @@ export default function Detector() {
                   name="bwd_pkts_per_sec"
                   value={formData.bwd_pkts_per_sec}
                   onChange={handleInputChange}
+                  required
+                  min="0"
                   className="w-full p-2 rounded-lg"
-                  style={inputStyle}
-                />
+                  style={{
+                    ...inputStyle,
+                    border: fieldErrors['bwd_pkts_per_sec'] ? '1px solid red' : '0.5px solid var(--border)',
+                    }}
+                    />
+                    {fieldErrors['bwd_pkts_per_sec'] && (
+                    <p className="text-xs mt-1" style={{ color: 'red' }}>
+                    {fieldErrors['bwd_pkts_per_sec']}
+                    </p>
+                    )}
               </div>
             </div>
 
             <div className="pt-4" style={{ borderTop: '0.5px solid var(--border)' }}>
               <p className="text-sm font-medium mb-3" style={{ color: 'var(--foreground)' }}>
-                TCP Flags
+                TCP Flags 
               </p>
 
               <div className="grid grid-cols-2 gap-4">
@@ -473,14 +630,24 @@ export default function Detector() {
                     name="flow_SYN_flag_count"
                     value={formData.flow_SYN_flag_count}
                     onChange={handleInputChange}
+                    required
+                    min="0"
                     className="w-full p-2 rounded-lg"
-                    style={inputStyle}
-                  />
+                    style={{
+                    ...inputStyle,
+                    border: fieldErrors['flow_SYN_flag_count'] ? '1px solid red' : '0.5px solid var(--border)',
+                    }}
+                    />
+                    {fieldErrors['flow_SYN_flag_count'] && (
+                    <p className="text-xs mt-1" style={{ color: 'red' }}>
+                    {fieldErrors['flow_SYN_flag_count']}
+                    </p>
+                    )}
                 </div>
 
                 <div>
                   <label className="block text-xs mb-1" style={{ color: 'var(--vt-text-muted)' }}>
-                    ACK Count
+                    ACK Count 
                   </label>
                   <input
                     type="number"
@@ -488,14 +655,24 @@ export default function Detector() {
                     name="flow_ACK_flag_count"
                     value={formData.flow_ACK_flag_count}
                     onChange={handleInputChange}
+                    required
+                    min="0"
                     className="w-full p-2 rounded-lg"
-                    style={inputStyle}
-                  />
+                    style={{
+                    ...inputStyle,
+                    border: fieldErrors['flow_ACK_flag_count'] ? '1px solid red' : '0.5px solid var(--border)',
+                    }}
+                    />
+                    {fieldErrors['flow_ACK_flag_count'] && (
+                    <p className="text-xs mt-1" style={{ color: 'red' }}>
+                    {fieldErrors['flow_ACK_flag_count']}
+                    </p>
+                    )}
                 </div>
 
                 <div>
                   <label className="block text-xs mb-1" style={{ color: 'var(--vt-text-muted)' }}>
-                    RST Count
+                    RST Count 
                   </label>
                   <input
                     type="number"
@@ -503,14 +680,24 @@ export default function Detector() {
                     name="flow_RST_flag_count"
                     value={formData.flow_RST_flag_count}
                     onChange={handleInputChange}
+                    required
+                    min="0"
                     className="w-full p-2 rounded-lg"
-                    style={inputStyle}
-                  />
+                    style={{
+                    ...inputStyle,
+                    border: fieldErrors['flow_RST_flag_count'] ? '1px solid red' : '0.5px solid var(--border)',
+                    }}
+                    />
+                    {fieldErrors['flow_RST_flag_count'] && (
+                    <p className="text-xs mt-1" style={{ color: 'red' }}>
+                    {fieldErrors['flow_RST_flag_count']}
+                    </p>
+                    )}
                 </div>
 
                 <div>
                   <label className="block text-xs mb-1" style={{ color: 'var(--vt-text-muted)' }}>
-                    FIN Count
+                    FIN Count 
                   </label>
                   <input
                     type="number"
@@ -518,9 +705,19 @@ export default function Detector() {
                     name="flow_FIN_flag_count"
                     value={formData.flow_FIN_flag_count}
                     onChange={handleInputChange}
+                    required
+                    min="0"
                     className="w-full p-2 rounded-lg"
-                    style={inputStyle}
-                  />
+                   style={{
+                    ...inputStyle,
+                    border: fieldErrors['flow_FIN_flag_count'] ? '1px solid red' : '0.5px solid var(--border)',
+                    }}
+                    />
+                    {fieldErrors['flow_FIN_flag_count'] && (
+                    <p className="text-xs mt-1" style={{ color: 'red' }}>
+                    {fieldErrors['flow_FIN_flag_count']}
+                    </p>
+                    )}
                 </div>
               </div>
             </div>
@@ -533,7 +730,7 @@ export default function Detector() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs mb-1" style={{ color: 'var(--vt-text-muted)' }}>
-                    Fwd Payload Avg
+                    Fwd Payload Avg 
                   </label>
                   <input
                     type="number"
@@ -541,14 +738,24 @@ export default function Detector() {
                     name="fwd_pkts_payload.avg"
                     value={formData['fwd_pkts_payload.avg']}
                     onChange={handleInputChange}
+                    required
+                    min="0"
                     className="w-full p-2 rounded-lg"
-                    style={inputStyle}
-                  />
+                    style={{
+                    ...inputStyle,
+                    border: fieldErrors['fwd_pkts_payload.avg'] ? '1px solid red' : '0.5px solid var(--border)',
+                    }}
+                    />
+                    {fieldErrors['fwd_pkts_payload.avg'] && (
+                    <p className="text-xs mt-1" style={{ color: 'red' }}>
+                    {fieldErrors['fwd_pkts_payload.avg']}
+                    </p>
+                    )}
                 </div>
 
                 <div>
                   <label className="block text-xs mb-1" style={{ color: 'var(--vt-text-muted)' }}>
-                    Bwd Payload Avg
+                    Bwd Payload Avg 
                   </label>
                   <input
                     type="number"
@@ -556,14 +763,24 @@ export default function Detector() {
                     name="bwd_pkts_payload.avg"
                     value={formData['bwd_pkts_payload.avg']}
                     onChange={handleInputChange}
+                    required
+                    min="0"
                     className="w-full p-2 rounded-lg"
-                    style={inputStyle}
-                  />
+                    style={{
+                    ...inputStyle,
+                    border: fieldErrors['bwd_pkts_payload.avg'] ? '1px solid red' : '0.5px solid var(--border)',
+                    }}
+                    />
+                    {fieldErrors['bwd_pkts_payload.avg'] && (
+                    <p className="text-xs mt-1" style={{ color: 'red' }}>
+                    {fieldErrors['bwd_pkts_payload.avg']}
+                    </p>
+                    )}
                 </div>
 
                 <div>
                   <label className="block text-xs mb-1" style={{ color: 'var(--vt-text-muted)' }}>
-                    Fwd Payload Total
+                    Fwd Payload Total 
                   </label>
                   <input
                     type="number"
@@ -571,14 +788,24 @@ export default function Detector() {
                     name="fwd_pkts_payload.tot"
                     value={formData['fwd_pkts_payload.tot']}
                     onChange={handleInputChange}
+                    required
+                    min="0"
                     className="w-full p-2 rounded-lg"
-                    style={inputStyle}
-                  />
+                    style={{
+                    ...inputStyle,
+                    border: fieldErrors['fwd_pkts_payload.tot'] ? '1px solid red' : '0.5px solid var(--border)',
+                    }}
+                    />
+                    {fieldErrors['fwd_pkts_payload.tot'] && (
+                    <p className="text-xs mt-1" style={{ color: 'red' }}>
+                    {fieldErrors['fwd_pkts_payload.tot']}
+                    </p>
+                    )}
                 </div>
 
                 <div>
                   <label className="block text-xs mb-1" style={{ color: 'var(--vt-text-muted)' }}>
-                    Fwd Payload Min
+                    Fwd Payload Min 
                   </label>
                   <input
                     type="number"
@@ -586,14 +813,24 @@ export default function Detector() {
                     name="fwd_pkts_payload.min"
                     value={formData['fwd_pkts_payload.min']}
                     onChange={handleInputChange}
+                    required
+                    min="0"
                     className="w-full p-2 rounded-lg"
-                    style={inputStyle}
-                  />
+                    style={{
+                    ...inputStyle,
+                    border: fieldErrors['fwd_pkts_payload.min'] ? '1px solid red' : '0.5px solid var(--border)',
+                    }}
+                    />
+                    {fieldErrors['fwd_pkts_payload.min'] && (
+                    <p className="text-xs mt-1" style={{ color: 'red' }}>
+                    {fieldErrors['fwd_pkts_payload.min']}
+                    </p>
+                    )}
                 </div>
 
                 <div>
                   <label className="block text-xs mb-1" style={{ color: 'var(--vt-text-muted)' }}>
-                    Flow Payload Avg
+                    Flow Payload Avg 
                   </label>
                   <input
                     type="number"
@@ -601,14 +838,24 @@ export default function Detector() {
                     name="flow_pkts_payload.avg"
                     value={formData['flow_pkts_payload.avg']}
                     onChange={handleInputChange}
+                    required
+                    min="0"
                     className="w-full p-2 rounded-lg"
-                    style={inputStyle}
-                  />
+                    style={{
+                    ...inputStyle,
+                    border: fieldErrors['flow_pkts_payload.avg'] ? '1px solid red' : '0.5px solid var(--border)',
+                    }}
+                    />
+                    {fieldErrors['flow_pkts_payload.avg'] && (
+                    <p className="text-xs mt-1" style={{ color: 'red' }}>
+                    {fieldErrors['flow_pkts_payload.avg']}
+                    </p>
+                    )}
                 </div>
 
                 <div>
                   <label className="block text-xs mb-1" style={{ color: 'var(--vt-text-muted)' }}>
-                    Flow Payload Std
+                    Flow Payload Std 
                   </label>
                   <input
                     type="number"
@@ -616,9 +863,19 @@ export default function Detector() {
                     name="flow_pkts_payload.std"
                     value={formData['flow_pkts_payload.std']}
                     onChange={handleInputChange}
+                    required
+                    min="0"
                     className="w-full p-2 rounded-lg"
-                    style={inputStyle}
-                  />
+                    style={{
+                    ...inputStyle,
+                    border: fieldErrors['flow_pkts_payload.std'] ? '1px solid red' : '0.5px solid var(--border)',
+                    }}
+                    />
+                    {fieldErrors['flow_pkts_payload.std'] && (
+                    <p className="text-xs mt-1" style={{ color: 'red' }}>
+                    {fieldErrors['flow_pkts_payload.std']}
+                    </p>
+                    )}
                 </div>
               </div>
             </div>
@@ -639,9 +896,19 @@ export default function Detector() {
                     name="fwd_iat.avg"
                     value={formData['fwd_iat.avg']}
                     onChange={handleInputChange}
+                    required
+                    min="0"
                     className="w-full p-2 rounded-lg"
-                    style={inputStyle}
-                  />
+                    style={{
+                    ...inputStyle,
+                    border: fieldErrors['fwd_iat.avg'] ? '1px solid red' : '0.5px solid var(--border)',
+                    }}
+                    />
+                    {fieldErrors['fwd_iat.avg'] && (
+                    <p className="text-xs mt-1" style={{ color: 'red' }}>
+                    {fieldErrors['fwd_iat.avg']}
+                    </p>
+                    )}
                 </div>
 
                 <div>
@@ -654,14 +921,24 @@ export default function Detector() {
                     name="bwd_iat.avg"
                     value={formData['bwd_iat.avg']}
                     onChange={handleInputChange}
+                    required
+                    min="0"
                     className="w-full p-2 rounded-lg"
-                    style={inputStyle}
-                  />
+                    style={{
+                    ...inputStyle,
+                    border: fieldErrors['bwd_iat.avg'] ? '1px solid red' : '0.5px solid var(--border)',
+                    }}
+                    />
+                    {fieldErrors['bwd_iat.avg'] && (
+                    <p className="text-xs mt-1" style={{ color: 'red' }}>
+                    {fieldErrors['bwd_iat.avg']}
+                    </p>
+                    )}
                 </div>
 
                 <div>
                   <label className="block text-xs mb-1" style={{ color: 'var(--vt-text-muted)' }}>
-                    Flow IAT Avg
+                    Flow IAT Avg 
                   </label>
                   <input
                     type="number"
@@ -669,9 +946,19 @@ export default function Detector() {
                     name="flow_iat.avg"
                     value={formData['flow_iat.avg']}
                     onChange={handleInputChange}
+                    required
+                    min="0"
                     className="w-full p-2 rounded-lg"
-                    style={inputStyle}
-                  />
+                    style={{
+                    ...inputStyle,
+                    border: fieldErrors['flow_iat.avg'] ? '1px solid red' : '0.5px solid var(--border)',
+                    }}
+                    />
+                    {fieldErrors['flow_iat.avg'] && (
+                    <p className="text-xs mt-1" style={{ color: 'red' }}>
+                    {fieldErrors['flow_iat.avg']}
+                    </p>
+                    )}
                 </div>
               </div>
             </div>
@@ -684,7 +971,7 @@ export default function Detector() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs mb-1" style={{ color: 'var(--vt-text-muted)' }}>
-                    Fwd Init Window Size
+                    Fwd Init Window Size 
                   </label>
                   <input
                     type="number"
@@ -692,14 +979,24 @@ export default function Detector() {
                     name="fwd_init_window_size"
                     value={formData.fwd_init_window_size}
                     onChange={handleInputChange}
+                    required
+                    min="0"
                     className="w-full p-2 rounded-lg"
-                    style={inputStyle}
-                  />
+                    style={{
+                    ...inputStyle,
+                    border: fieldErrors['fwd_init_window_size'] ? '1px solid red' : '0.5px solid var(--border)',
+                    }}
+                    />
+                    {fieldErrors['fwd_init_window_size'] && (
+                    <p className="text-xs mt-1" style={{ color: 'red' }}>
+                    {fieldErrors['fwd_init_window_size']}
+                    </p>
+                    )}
                 </div>
 
                 <div>
                   <label className="block text-xs mb-1" style={{ color: 'var(--vt-text-muted)' }}>
-                    Bwd Init Window Size
+                    Bwd Init Window Size 
                   </label>
                   <input
                     type="number"
@@ -707,14 +1004,24 @@ export default function Detector() {
                     name="bwd_init_window_size"
                     value={formData.bwd_init_window_size}
                     onChange={handleInputChange}
+                    required
+                    min="0"
                     className="w-full p-2 rounded-lg"
-                    style={inputStyle}
-                  />
+                    style={{
+                    ...inputStyle,
+                    border: fieldErrors['bwd_init_window_size'] ? '1px solid red' : '0.5px solid var(--border)',
+                    }}
+                    />
+                    {fieldErrors['bwd_init_window_size'] && (
+                    <p className="text-xs mt-1" style={{ color: 'red' }}>
+                    {fieldErrors['bwd_init_window_size']}
+                    </p>
+                    )}
                 </div>
 
                 <div>
                   <label className="block text-xs mb-1" style={{ color: 'var(--vt-text-muted)' }}>
-                    Fwd Last Window Size
+                    Fwd Last Window Size 
                   </label>
                   <input
                     type="number"
@@ -722,9 +1029,19 @@ export default function Detector() {
                     name="fwd_last_window_size"
                     value={formData.fwd_last_window_size}
                     onChange={handleInputChange}
+                    required
+                    min="0"
                     className="w-full p-2 rounded-lg"
-                    style={inputStyle}
-                  />
+                    style={{
+                    ...inputStyle,
+                    border: fieldErrors['fwd_last_window_size'] ? '1px solid red' : '0.5px solid var(--border)',
+                    }}
+                    />
+                    {fieldErrors['fwd_last_window_size'] && (
+                    <p className="text-xs mt-1" style={{ color: 'red' }}>
+                    {fieldErrors['fwd_last_window_size']}
+                    </p>
+                    )}
                 </div>
               </div>
             </div>
@@ -737,7 +1054,7 @@ export default function Detector() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs mb-1" style={{ color: 'var(--vt-text-muted)' }}>
-                    Active Avg
+                    Active Avg 
                   </label>
                   <input
                     type="number"
@@ -745,14 +1062,24 @@ export default function Detector() {
                     name="active.avg"
                     value={formData['active.avg']}
                     onChange={handleInputChange}
+                    required
+                    min="0"
                     className="w-full p-2 rounded-lg"
-                    style={inputStyle}
-                  />
+                    style={{
+                    ...inputStyle,
+                    border: fieldErrors['active.avg'] ? '1px solid red' : '0.5px solid var(--border)',
+                    }}
+                    />
+                    {fieldErrors['active.avg'] && (
+                    <p className="text-xs mt-1" style={{ color: 'red' }}>
+                    {fieldErrors['active.avg']}
+                    </p>
+                    )}
                 </div>
 
                 <div>
                   <label className="block text-xs mb-1" style={{ color: 'var(--vt-text-muted)' }}>
-                    Active Total
+                    Active Total 
                   </label>
                   <input
                     type="number"
@@ -760,14 +1087,24 @@ export default function Detector() {
                     name="active.tot"
                     value={formData['active.tot']}
                     onChange={handleInputChange}
+                    required
+                    min="0"
                     className="w-full p-2 rounded-lg"
-                    style={inputStyle}
-                  />
+                    style={{
+                    ...inputStyle,
+                    border: fieldErrors['active.tot'] ? '1px solid red' : '0.5px solid var(--border)',
+                    }}
+                    />
+                    {fieldErrors['active.tot'] && (
+                    <p className="text-xs mt-1" style={{ color: 'red' }}>
+                    {fieldErrors['active.tot']}
+                    </p>
+                    )}
                 </div>
 
                 <div>
                   <label className="block text-xs mb-1" style={{ color: 'var(--vt-text-muted)' }}>
-                    Active Min
+                    Active Min 
                   </label>
                   <input
                     type="number"
@@ -775,9 +1112,19 @@ export default function Detector() {
                     name="active.min"
                     value={formData['active.min']}
                     onChange={handleInputChange}
+                    required
+                    min="0"
                     className="w-full p-2 rounded-lg"
-                    style={inputStyle}
-                  />
+                    style={{
+                    ...inputStyle,
+                    border: fieldErrors['active.min'] ? '1px solid red' : '0.5px solid var(--border)',
+                    }}
+                    />
+                    {fieldErrors['active.min'] && (
+                    <p className="text-xs mt-1" style={{ color: 'red' }}>
+                    {fieldErrors['active.min']}
+                    </p>
+                    )}
                 </div>
               </div>
             </div>
@@ -790,7 +1137,7 @@ export default function Detector() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs mb-1" style={{ color: 'var(--vt-text-muted)' }}>
-                    Fwd Subflow Bytes
+                    Fwd Subflow Bytes 
                   </label>
                   <input
                     type="number"
@@ -798,9 +1145,19 @@ export default function Detector() {
                     name="fwd_subflow_bytes"
                     value={formData.fwd_subflow_bytes}
                     onChange={handleInputChange}
+                    required
+                    min="0"
                     className="w-full p-2 rounded-lg"
-                    style={inputStyle}
-                  />
+                    style={{
+                    ...inputStyle,
+                    border: fieldErrors['fwd_subflow_bytes'] ? '1px solid red' : '0.5px solid var(--border)',
+                    }}
+                    />
+                    {fieldErrors['fwd_subflow_bytes'] && (
+                    <p className="text-xs mt-1" style={{ color: 'red' }}>
+                    {fieldErrors['fwd_subflow_bytes']}
+                    </p>
+                    )}
                 </div>
 
                 <div>
@@ -813,14 +1170,24 @@ export default function Detector() {
                     name="fwd_header_size_tot"
                     value={formData.fwd_header_size_tot}
                     onChange={handleInputChange}
+                    required
+                    min="0"
                     className="w-full p-2 rounded-lg"
-                    style={inputStyle}
-                  />
+                    style={{
+                    ...inputStyle,
+                    border: fieldErrors['fwd_header_size_tot'] ? '1px solid red' : '0.5px solid var(--border)',
+                    }}
+                    />
+                    {fieldErrors['fwd_header_size_tot'] && (
+                    <p className="text-xs mt-1" style={{ color: 'red' }}>
+                    {fieldErrors['fwd_header_size_tot']}
+                    </p>
+                    )}
                 </div>
 
                 <div>
                   <label className="block text-xs mb-1" style={{ color: 'var(--vt-text-muted)' }}>
-                    Response Port
+                    Response Port 
                   </label>
                   <input
                     type="number"
@@ -828,14 +1195,30 @@ export default function Detector() {
                     name="id.resp_p"
                     value={formData['id.resp_p']}
                     onChange={handleInputChange}
+                    min="0"
                     className="w-full p-2 rounded-lg"
-                    style={inputStyle}
-                  />
+                   style={{
+                    ...inputStyle,
+                    border: fieldErrors['id.resp_p'] ? '1px solid red' : '0.5px solid var(--border)',
+                    }}
+                    />
+                    {fieldErrors['id.resp_p'] && (
+                    <p className="text-xs mt-1" style={{ color: 'red' }}>
+                    {fieldErrors['id.resp_p']}
+                    </p>
+                    )}
                 </div>
               </div>
             </div>
+          </>
+          )}
 
-            <div className="flex gap-2 pt-4" style={{ borderTop: '0.5px solid var(--border)' }}>
+           <div className="pt-4" style={{ borderTop: '0.5px solid var(--border)' }}>
+              <p className="text-sm font-medium mb-3" style={{ color: 'var(--foreground)' }}>
+                Select Model
+              </p>
+              
+             <div className="flex gap-2">
               <select
                 value={selectedModel}
                 onChange={(e) => setSelectedModel(e.target.value)}
@@ -860,9 +1243,10 @@ export default function Detector() {
               >
                 Analyze
               </button>
+               </div>
             </div>
-          </div>
-        </div>
+         </div> 
+         </div> 
 
         <div
           className="rounded p-6"
@@ -979,4 +1363,4 @@ export default function Detector() {
       </div>
     </div>
   );
-}
+};
