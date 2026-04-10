@@ -1,277 +1,35 @@
-import { JSX, useState } from 'react';
-import { Shield, AlertTriangle, CheckCircle, Activity, Upload, FileSpreadsheet } from 'lucide-react';
-
-const PROTOCOLS = ['tcp', 'udp', 'icmp'];
-const ML_MODELS = ['Random Forest', 'KNN', 'Decision Tree'];
-
-const createInitialFormData = () => ({
-  proto: 'tcp',
-  service: 'Unidentified',
-  flow_duration: '0',
-  fwd_pkts_tot: '0',
-  bwd_pkts_tot: '0',
-  flow_pkts_per_sec: '0',
-  down_up_ratio: '0',
-  flow_FIN_flag_count: '0',
-  flow_SYN_flag_count: '0',
-  flow_RST_flag_count: '0',
-  flow_ACK_flag_count: '0',
-  'fwd_pkts_payload.avg': '0',
-  'bwd_pkts_payload.avg': '0',
-  'fwd_pkts_payload.tot': '0',
-  'fwd_pkts_payload.min': '0',
-  'flow_pkts_payload.avg': '0',
-  'flow_pkts_payload.std': '0',
-  'fwd_iat.avg': '0',
-  'bwd_iat.avg': '0',
-  'flow_iat.avg': '0',
-  fwd_init_window_size: '0',
-  bwd_init_window_size: '0',
-  fwd_last_window_size: '0',
-  payload_bytes_per_second: '0',
-  fwd_subflow_bytes: '0',
-  fwd_header_size_tot: '0',
-  'active.avg': '0',
-  'active.tot': '0',
-  'active.min': '0',
-  'id.resp_p': '0',
-  bwd_pkts_per_sec: '0',
-});
-
-type FormDataType = ReturnType<typeof createInitialFormData>;
+import { Activity, Upload, FileSpreadsheet } from 'lucide-react';
+import { useDetector, riskStyles } from '../hooks/useDetector';
 
 export default function Detector() {
-  const [formData, setFormData] = useState<FormDataType>(createInitialFormData());
-  const [selectedModel, setSelectedModel] = useState('Random Forest');
-  const [excelData, setExcelData] = useState('');
-  const [showExcelImport, setShowExcelImport] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
-  const [isDataOpen, setIsDataOpen] = useState(true);
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const {
+  formData, selectedModel, showExcelImport,
+  successMessage, isDataOpen, fieldErrors,
+  prediction, loading, error,
+  PROTOCOLS, ML_MODELS,
+  handleInputChange, handleFileUpload,
+  handleImportData, detectAttack,
+  setSelectedModel, setIsDataOpen,
+} = useDetector();
 
-  const [prediction, setPrediction] = useState<{
-    type: string;
-    confidence: number;
-    riskLevel: 'low' | 'medium' | 'high';
-    topFeatures: { name: string; impact: string }[];
-  } | null>(null);
-
-  const parseCSVLine = (line: string) => {
-    const values: string[] = [];
-    let current = '';
-    let insideQuotes = false;
-
-    for (let i = 0; i < line.length; i++) {
-      const char = line[i];
-      const nextChar = line[i + 1];
-
-      if (char === '"') {
-        if (insideQuotes && nextChar === '"') {
-          current += '"';
-          i++;
-        } else {
-          insideQuotes = !insideQuotes;
-        }
-      } else if (char === ',' && !insideQuotes) {
-        values.push(current.trim());
-        current = '';
-      } else {
-        current += char;
-      }
-    }
-
-    values.push(current.trim());
-    return values;
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-    setSuccessMessage('');
-    
-    setFieldErrors((prev) => {
-    const updatedErrors = { ...prev };
-
-    if (e.target.value === '') {
-      updatedErrors[e.target.name] = 'This field is required.';
-    } else if (e.target instanceof HTMLInputElement && e.target.type === 'number' && Number(e.target.value) < 0) {
-      updatedErrors[e.target.name] = 'Negative values are not allowed.';
-    } else {
-      delete updatedErrors[e.target.name];
-    }
-
-    return updatedErrors;
-  });
-  };
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const text = event.target?.result as string;
-        setExcelData(text);
-        setShowExcelImport(true);
-        setSuccessMessage('');
-      };
-      reader.readAsText(file);
-    }
-  };
-
-  const handleImportData = () => {
-    try {
-      const lines = excelData
-        .split(/\r?\n/)
-        .map((line) => line.trim())
-        .filter((line) => line.length > 0);
-
-      if (lines.length > 1) {
-        const headers = parseCSVLine(lines[0]);
-        const values = parseCSVLine(lines[1]);
-
-        const getValue = (column: keyof FormDataType) => {
-          const index = headers.indexOf(column);
-          if (index !== -1 && values[index] !== undefined && values[index] !== '') {
-            return values[index];
-          }
-          return formData[column];
-        };
-
-        setFormData({
-          proto: getValue('proto'),
-          service: getValue('service'),
-          flow_duration: getValue('flow_duration'),
-          fwd_pkts_tot: getValue('fwd_pkts_tot'),
-          bwd_pkts_tot: getValue('bwd_pkts_tot'),
-          flow_pkts_per_sec: getValue('flow_pkts_per_sec'),
-          down_up_ratio: getValue('down_up_ratio'),
-          flow_FIN_flag_count: getValue('flow_FIN_flag_count'),
-          flow_SYN_flag_count: getValue('flow_SYN_flag_count'),
-          flow_RST_flag_count: getValue('flow_RST_flag_count'),
-          flow_ACK_flag_count: getValue('flow_ACK_flag_count'),
-          'fwd_pkts_payload.avg': getValue('fwd_pkts_payload.avg'),
-          'bwd_pkts_payload.avg': getValue('bwd_pkts_payload.avg'),
-          'fwd_pkts_payload.tot': getValue('fwd_pkts_payload.tot'),
-          'fwd_pkts_payload.min': getValue('fwd_pkts_payload.min'),
-          'flow_pkts_payload.avg': getValue('flow_pkts_payload.avg'),
-          'flow_pkts_payload.std': getValue('flow_pkts_payload.std'),
-          'fwd_iat.avg': getValue('fwd_iat.avg'),
-          'bwd_iat.avg': getValue('bwd_iat.avg'),
-          'flow_iat.avg': getValue('flow_iat.avg'),
-          fwd_init_window_size: getValue('fwd_init_window_size'),
-          bwd_init_window_size: getValue('bwd_init_window_size'),
-          fwd_last_window_size: getValue('fwd_last_window_size'),
-          payload_bytes_per_second: getValue('payload_bytes_per_second'),
-          fwd_subflow_bytes: getValue('fwd_subflow_bytes'),
-          fwd_header_size_tot: getValue('fwd_header_size_tot'),
-          'active.avg': getValue('active.avg'),
-          'active.tot': getValue('active.tot'),
-          'active.min': getValue('active.min'),
-          'id.resp_p': getValue('id.resp_p'),
-          bwd_pkts_per_sec: getValue('bwd_pkts_per_sec'),
-        });
-
-        setShowExcelImport(false);
-        setExcelData('');
-        setSuccessMessage('File imported and data filled successfully.');
-      }
-    } catch (error) {
-      console.error('Error parsing data:', error);
-    }
-  };
-  
-  const detectAttack = () => {
-  const errors: Record<string, string> = {};
-
-  Object.entries(formData).forEach(([key, value]) => {
-    if (value === '') {
-      errors[key] = 'This field is required.';
-      return;
-    }
-
-    if (key !== 'proto' && key !== 'service') {
-      const num = Number(value);
-      if (isNaN(num)) {
-        errors[key] = 'A numeric value is required.';
-      } else if (num < 0) {
-        errors[key] = 'Negative values are not allowed.';
-      }
-    }
-  });
-
-  setFieldErrors(errors);
-
-  if (Object.keys(errors).length > 0) {
-    return;
-  }
-
-  const pktsPerSec = parseFloat(formData.flow_pkts_per_sec);
-  const synCount = parseFloat(formData.flow_SYN_flag_count);
-  const rstCount = parseFloat(formData.flow_RST_flag_count);
-  const payloadBytes = parseFloat(formData.payload_bytes_per_second);
-
-  let predictedType = 'Normal';
-  let confidence = 0.92;
-  let riskLevel: 'low' | 'medium' | 'high' = 'low';
-
-  if (pktsPerSec > 500 || synCount > 20 || payloadBytes > 20000) {
-    predictedType = pktsPerSec > 1000 ? 'DDoS' : 'DoS';
-    confidence = 0.89;
-    riskLevel = 'high';
-  } else if (synCount > 10 && rstCount > 5) {
-    predictedType = 'Reconnaissance';
-    confidence = 0.85;
-    riskLevel = 'medium';
-  } else if (parseFloat(formData.flow_duration) > 100 && pktsPerSec > 100) {
-    predictedType = 'Mirai';
-    confidence = 0.87;
-    riskLevel = 'high';
-  }
-
-  const topFeatures = [
-    { name: 'flow_pkts_per_sec', impact: pktsPerSec > 100 ? 'High' : 'Normal' },
-    { name: 'flow_SYN_flag_count', impact: synCount > 5 ? 'High' : 'Normal' },
-    { name: 'payload_bytes_per_second', impact: payloadBytes > 10000 ? 'High' : 'Normal' },
-  ];
-
-  setPrediction({
-    type: predictedType,
-    confidence,
-    riskLevel,
-    topFeatures,
-  });
-};
-
-  const riskStyles: Record<'low' | 'medium' | 'high', { bg: string; border: string; text: string; icon: JSX.Element }> = {
-    low: {
-      bg: 'rgba(76,175,110,0.08)',
-      border: '#4CAF6E',
-      text: '#4CAF6E',
-      icon: <CheckCircle className="w-16 h-16" style={{ color: '#4CAF6E' }} />,
-    },
-    medium: {
-      bg: 'rgba(232,200,64,0.08)',
-      border: '#E8C840',
-      text: '#E8C840',
-      icon: <AlertTriangle className="w-16 h-16" style={{ color: '#E8C840' }} />,
-    },
-    high: {
-      bg: 'rgba(232,56,58,0.08)',
-      border: '#E8383A',
-      text: '#E8383A',
-      icon: <Shield className="w-16 h-16" style={{ color: '#E8383A' }} />,
-    },
-  };
-
-  const currentRiskStyle = prediction ? riskStyles[prediction.riskLevel] : null;
+const currentRiskStyle = prediction ? riskStyles[prediction.riskLevel] : null;
+const RiskIcon = currentRiskStyle?.icon;
 
   const inputStyle = {
     backgroundColor: 'var(--card)',
     border: '0.5px solid var(--border)',
     color: 'var(--foreground)',
   };
+
+const formatPrediction = (type: string) => {
+  const labels: Record<string, string> = {
+    'DOS_SYN_Hping':  'DOS SYN Hping',
+    'ARP_poisioning': 'ARP Poisoning',
+    'NMAP':           'NMAP Scan',
+    'Normal':         'Normal Traffic',
+  };
+  return labels[type] ?? type;
+};
 
   return (
     <div className="space-y-6">
@@ -735,20 +493,20 @@ export default function Detector() {
                   <input
                     type="number"
                     step="any"
-                    name="fwd_pkts_payload.avg"
-                    value={formData['fwd_pkts_payload.avg']}
+                    name="fwd_pkts_payload_avg"
+                    value={formData['fwd_pkts_payload_avg']}
                     onChange={handleInputChange}
                     required
                     min="0"
                     className="w-full p-2 rounded-lg"
                     style={{
                     ...inputStyle,
-                    border: fieldErrors['fwd_pkts_payload.avg'] ? '1px solid red' : '0.5px solid var(--border)',
+                    border: fieldErrors['fwd_pkts_payload_avg'] ? '1px solid red' : '0.5px solid var(--border)',
                     }}
                     />
-                    {fieldErrors['fwd_pkts_payload.avg'] && (
+                    {fieldErrors['fwd_pkts_payload_avg'] && (
                     <p className="text-xs mt-1" style={{ color: 'red' }}>
-                    {fieldErrors['fwd_pkts_payload.avg']}
+                    {fieldErrors['fwd_pkts_payload_avg']}
                     </p>
                     )}
                 </div>
@@ -760,20 +518,20 @@ export default function Detector() {
                   <input
                     type="number"
                     step="any"
-                    name="bwd_pkts_payload.avg"
-                    value={formData['bwd_pkts_payload.avg']}
+                    name="bwd_pkts_payload_avg"
+                    value={formData['bwd_pkts_payload_avg']}
                     onChange={handleInputChange}
                     required
                     min="0"
                     className="w-full p-2 rounded-lg"
                     style={{
                     ...inputStyle,
-                    border: fieldErrors['bwd_pkts_payload.avg'] ? '1px solid red' : '0.5px solid var(--border)',
+                    border: fieldErrors['bwd_pkts_payload_avg'] ? '1px solid red' : '0.5px solid var(--border)',
                     }}
                     />
-                    {fieldErrors['bwd_pkts_payload.avg'] && (
+                    {fieldErrors['bwd_pkts_payload_avg'] && (
                     <p className="text-xs mt-1" style={{ color: 'red' }}>
-                    {fieldErrors['bwd_pkts_payload.avg']}
+                    {fieldErrors['bwd_pkts_payload_avg']}
                     </p>
                     )}
                 </div>
@@ -785,20 +543,20 @@ export default function Detector() {
                   <input
                     type="number"
                     step="any"
-                    name="fwd_pkts_payload.tot"
-                    value={formData['fwd_pkts_payload.tot']}
+                    name="fwd_pkts_payload_tot"
+                    value={formData['fwd_pkts_payload_tot']}
                     onChange={handleInputChange}
                     required
                     min="0"
                     className="w-full p-2 rounded-lg"
                     style={{
                     ...inputStyle,
-                    border: fieldErrors['fwd_pkts_payload.tot'] ? '1px solid red' : '0.5px solid var(--border)',
+                    border: fieldErrors['fwd_pkts_payload_tot'] ? '1px solid red' : '0.5px solid var(--border)',
                     }}
                     />
-                    {fieldErrors['fwd_pkts_payload.tot'] && (
+                    {fieldErrors['fwd_pkts_payload_tot'] && (
                     <p className="text-xs mt-1" style={{ color: 'red' }}>
-                    {fieldErrors['fwd_pkts_payload.tot']}
+                    {fieldErrors['fwd_pkts_payload_tot']}
                     </p>
                     )}
                 </div>
@@ -810,20 +568,20 @@ export default function Detector() {
                   <input
                     type="number"
                     step="any"
-                    name="fwd_pkts_payload.min"
-                    value={formData['fwd_pkts_payload.min']}
+                    name="fwd_pkts_payload_min"
+                    value={formData['fwd_pkts_payload_min']}
                     onChange={handleInputChange}
                     required
                     min="0"
                     className="w-full p-2 rounded-lg"
                     style={{
                     ...inputStyle,
-                    border: fieldErrors['fwd_pkts_payload.min'] ? '1px solid red' : '0.5px solid var(--border)',
+                    border: fieldErrors['fwd_pkts_payload_min'] ? '1px solid red' : '0.5px solid var(--border)',
                     }}
                     />
-                    {fieldErrors['fwd_pkts_payload.min'] && (
+                    {fieldErrors['fwd_pkts_payload_min'] && (
                     <p className="text-xs mt-1" style={{ color: 'red' }}>
-                    {fieldErrors['fwd_pkts_payload.min']}
+                    {fieldErrors['fwd_pkts_payload_min']}
                     </p>
                     )}
                 </div>
@@ -835,20 +593,20 @@ export default function Detector() {
                   <input
                     type="number"
                     step="any"
-                    name="flow_pkts_payload.avg"
-                    value={formData['flow_pkts_payload.avg']}
+                    name="flow_pkts_payload_avg"
+                    value={formData['flow_pkts_payload_avg']}
                     onChange={handleInputChange}
                     required
                     min="0"
                     className="w-full p-2 rounded-lg"
                     style={{
                     ...inputStyle,
-                    border: fieldErrors['flow_pkts_payload.avg'] ? '1px solid red' : '0.5px solid var(--border)',
+                    border: fieldErrors['flow_pkts_payload_avg'] ? '1px solid red' : '0.5px solid var(--border)',
                     }}
                     />
-                    {fieldErrors['flow_pkts_payload.avg'] && (
+                    {fieldErrors['flow_pkts_payload_avg'] && (
                     <p className="text-xs mt-1" style={{ color: 'red' }}>
-                    {fieldErrors['flow_pkts_payload.avg']}
+                    {fieldErrors['flow_pkts_payload_avg']}
                     </p>
                     )}
                 </div>
@@ -860,20 +618,20 @@ export default function Detector() {
                   <input
                     type="number"
                     step="any"
-                    name="flow_pkts_payload.std"
-                    value={formData['flow_pkts_payload.std']}
+                    name="flow_pkts_payload_std"
+                    value={formData['flow_pkts_payload_std']}
                     onChange={handleInputChange}
                     required
                     min="0"
                     className="w-full p-2 rounded-lg"
                     style={{
                     ...inputStyle,
-                    border: fieldErrors['flow_pkts_payload.std'] ? '1px solid red' : '0.5px solid var(--border)',
+                    border: fieldErrors['flow_pkts_payload_std'] ? '1px solid red' : '0.5px solid var(--border)',
                     }}
                     />
-                    {fieldErrors['flow_pkts_payload.std'] && (
+                    {fieldErrors['flow_pkts_payload_std'] && (
                     <p className="text-xs mt-1" style={{ color: 'red' }}>
-                    {fieldErrors['flow_pkts_payload.std']}
+                    {fieldErrors['flow_pkts_payload_std']}
                     </p>
                     )}
                 </div>
@@ -893,20 +651,20 @@ export default function Detector() {
                   <input
                     type="number"
                     step="any"
-                    name="fwd_iat.avg"
-                    value={formData['fwd_iat.avg']}
+                    name="fwd_iat_avg"
+                    value={formData['fwd_iat_avg']}
                     onChange={handleInputChange}
                     required
                     min="0"
                     className="w-full p-2 rounded-lg"
                     style={{
                     ...inputStyle,
-                    border: fieldErrors['fwd_iat.avg'] ? '1px solid red' : '0.5px solid var(--border)',
+                    border: fieldErrors['fwd_iat_avg'] ? '1px solid red' : '0.5px solid var(--border)',
                     }}
                     />
-                    {fieldErrors['fwd_iat.avg'] && (
+                    {fieldErrors['fwd_iat_avg'] && (
                     <p className="text-xs mt-1" style={{ color: 'red' }}>
-                    {fieldErrors['fwd_iat.avg']}
+                    {fieldErrors['fwd_iat_avg']}
                     </p>
                     )}
                 </div>
@@ -918,20 +676,20 @@ export default function Detector() {
                   <input
                     type="number"
                     step="any"
-                    name="bwd_iat.avg"
-                    value={formData['bwd_iat.avg']}
+                    name="bwd_iat_avg"
+                    value={formData['bwd_iat_avg']}
                     onChange={handleInputChange}
                     required
                     min="0"
                     className="w-full p-2 rounded-lg"
                     style={{
                     ...inputStyle,
-                    border: fieldErrors['bwd_iat.avg'] ? '1px solid red' : '0.5px solid var(--border)',
+                    border: fieldErrors['bwd_iat_avg'] ? '1px solid red' : '0.5px solid var(--border)',
                     }}
                     />
-                    {fieldErrors['bwd_iat.avg'] && (
+                    {fieldErrors['bwd_iat_avg'] && (
                     <p className="text-xs mt-1" style={{ color: 'red' }}>
-                    {fieldErrors['bwd_iat.avg']}
+                    {fieldErrors['bwd_iat_avg']}
                     </p>
                     )}
                 </div>
@@ -943,20 +701,20 @@ export default function Detector() {
                   <input
                     type="number"
                     step="any"
-                    name="flow_iat.avg"
-                    value={formData['flow_iat.avg']}
+                    name="flow_iat_avg"
+                    value={formData['flow_iat_avg']}
                     onChange={handleInputChange}
                     required
                     min="0"
                     className="w-full p-2 rounded-lg"
                     style={{
                     ...inputStyle,
-                    border: fieldErrors['flow_iat.avg'] ? '1px solid red' : '0.5px solid var(--border)',
+                    border: fieldErrors['flow_iat_avg'] ? '1px solid red' : '0.5px solid var(--border)',
                     }}
                     />
-                    {fieldErrors['flow_iat.avg'] && (
+                    {fieldErrors['flow_iat_avg'] && (
                     <p className="text-xs mt-1" style={{ color: 'red' }}>
-                    {fieldErrors['flow_iat.avg']}
+                    {fieldErrors['flow_iat_avg']}
                     </p>
                     )}
                 </div>
@@ -1059,20 +817,20 @@ export default function Detector() {
                   <input
                     type="number"
                     step="any"
-                    name="active.avg"
-                    value={formData['active.avg']}
+                    name="active_avg"
+                    value={formData['active_avg']}
                     onChange={handleInputChange}
                     required
                     min="0"
                     className="w-full p-2 rounded-lg"
                     style={{
                     ...inputStyle,
-                    border: fieldErrors['active.avg'] ? '1px solid red' : '0.5px solid var(--border)',
+                    border: fieldErrors['active_avg'] ? '1px solid red' : '0.5px solid var(--border)',
                     }}
                     />
-                    {fieldErrors['active.avg'] && (
+                    {fieldErrors['active_avg'] && (
                     <p className="text-xs mt-1" style={{ color: 'red' }}>
-                    {fieldErrors['active.avg']}
+                    {fieldErrors['active_avg']}
                     </p>
                     )}
                 </div>
@@ -1084,20 +842,20 @@ export default function Detector() {
                   <input
                     type="number"
                     step="any"
-                    name="active.tot"
-                    value={formData['active.tot']}
+                    name="active_tot"
+                    value={formData['active_tot']}
                     onChange={handleInputChange}
                     required
                     min="0"
                     className="w-full p-2 rounded-lg"
                     style={{
                     ...inputStyle,
-                    border: fieldErrors['active.tot'] ? '1px solid red' : '0.5px solid var(--border)',
+                    border: fieldErrors['active_tot'] ? '1px solid red' : '0.5px solid var(--border)',
                     }}
                     />
-                    {fieldErrors['active.tot'] && (
+                    {fieldErrors['active_tot'] && (
                     <p className="text-xs mt-1" style={{ color: 'red' }}>
-                    {fieldErrors['active.tot']}
+                    {fieldErrors['active_tot']}
                     </p>
                     )}
                 </div>
@@ -1109,20 +867,20 @@ export default function Detector() {
                   <input
                     type="number"
                     step="any"
-                    name="active.min"
-                    value={formData['active.min']}
+                    name="active_min"
+                    value={formData['active_min']}
                     onChange={handleInputChange}
                     required
                     min="0"
                     className="w-full p-2 rounded-lg"
                     style={{
                     ...inputStyle,
-                    border: fieldErrors['active.min'] ? '1px solid red' : '0.5px solid var(--border)',
+                    border: fieldErrors['active_min'] ? '1px solid red' : '0.5px solid var(--border)',
                     }}
                     />
-                    {fieldErrors['active.min'] && (
+                    {fieldErrors['active_min'] && (
                     <p className="text-xs mt-1" style={{ color: 'red' }}>
-                    {fieldErrors['active.min']}
+                    {fieldErrors['active_min']}
                     </p>
                     )}
                 </div>
@@ -1192,19 +950,19 @@ export default function Detector() {
                   <input
                     type="number"
                     step="any"
-                    name="id.resp_p"
-                    value={formData['id.resp_p']}
+                    name="id_resp_p"
+                    value={formData['id_resp_p']}
                     onChange={handleInputChange}
                     min="0"
                     className="w-full p-2 rounded-lg"
                    style={{
                     ...inputStyle,
-                    border: fieldErrors['id.resp_p'] ? '1px solid red' : '0.5px solid var(--border)',
+                    border: fieldErrors['id_resp_p'] ? '1px solid red' : '0.5px solid var(--border)',
                     }}
                     />
-                    {fieldErrors['id.resp_p'] && (
+                    {fieldErrors['id_resp_p'] && (
                     <p className="text-xs mt-1" style={{ color: 'red' }}>
-                    {fieldErrors['id.resp_p']}
+                    {fieldErrors['id_resp_p']}
                     </p>
                     )}
                 </div>
@@ -1217,8 +975,10 @@ export default function Detector() {
               <p className="text-sm font-medium mb-3" style={{ color: 'var(--foreground)' }}>
                 Select Model
               </p>
-              
-             <div className="flex gap-2">
+             {error && (
+                  <p className="text-xs mb-2" style={{ color: '#E8383A' }}>{error}</p>
+                )}
+                <div className="flex gap-2">
               <select
                 value={selectedModel}
                 onChange={(e) => setSelectedModel(e.target.value)}
@@ -1226,24 +986,26 @@ export default function Detector() {
                 style={inputStyle}
               >
                 {ML_MODELS.map((model) => (
-                  <option key={model} value={model}>
-                    {model}
+                  <option key={model.value} value={model.value}>
+                    {model.label}
                   </option>
                 ))}
-              </select>
-
-              <button
-                onClick={detectAttack}
-                className="flex-1 py-2 rounded-lg font-semibold transition-all"
-                style={{
-                  backgroundColor: '#00B8CC',
-                  color: '#ffffff',
-                  border: '0.5px solid #00B8CC',
-                }}
-              >
-                Analyze
-              </button>
-               </div>
+              </select>  
+                <button
+                  onClick={detectAttack}
+                  disabled={loading}
+                  className="flex-1 py-2 rounded-lg font-semibold transition-all"
+                  style={{
+                    backgroundColor: '#00B8CC',
+                    color: '#ffffff',
+                    border: '0.5px solid #00B8CC',
+                    opacity: loading ? 0.7 : 1,
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  {loading ? 'Analyzing...' : 'Analyze'}
+                </button> 
+              </div>
             </div>
          </div> 
          </div> 
@@ -1262,11 +1024,17 @@ export default function Detector() {
           {prediction ? (
             <div className="space-y-6">
               <div className="text-center py-8" style={{ borderBottom: '0.5px solid var(--border)' }}>
-                <div className="flex justify-center mb-4">{currentRiskStyle?.icon}</div>
+                <div className="flex justify-center mb-4">
+                  {RiskIcon && <RiskIcon className="w-16 h-16" style={{ color: currentRiskStyle?.text }} />}
+                </div>
 
                 <h3 className="text-2xl font-semibold mb-2" style={{ color: 'var(--foreground)' }}>
-                  {prediction.type}
+                  {formatPrediction(prediction.type)}
                 </h3>
+
+                <p className="text-xs mb-3" style={{ color: 'var(--vt-text-muted)' }}>
+                  Analyzed by {ML_MODELS.find(m => m.value === prediction.modelUsed)?.label ?? prediction.modelUsed}
+                </p>
 
                 <span
                   className="inline-block px-4 py-2 rounded-lg text-sm font-semibold"
@@ -1304,34 +1072,56 @@ export default function Detector() {
                 </div>
               </div>
 
-              <div>
-                <h3 className="font-semibold mb-3" style={{ color: 'var(--foreground)' }}>
-                  Determining Features
-                </h3>
-
-                <div className="space-y-2">
-                  {prediction.topFeatures.map((feature, idx) => (
-                    <div
-                      key={idx}
-                      className="flex justify-between items-center p-3 rounded-lg"
-                      style={{
-                        backgroundColor: 'rgba(255,255,255,0.03)',
-                        border: '0.5px solid var(--border)',
-                      }}
-                    >
-                      <span className="text-sm font-mono" style={{ color: 'var(--foreground)' }}>
-                        {feature.name}
-                      </span>
-                      <span
-                        className="text-sm font-semibold"
-                        style={{ color: feature.impact === 'High' ? '#E8383A' : '#4CAF6E' }}
-                      >
-                        {feature.impact}
-                      </span>
-                    </div>
-                  ))}
+              {prediction.shapFeatures.length > 0 && (
+                <div>
+                  <h3 className="font-semibold mb-3" style={{ color: 'var(--foreground)' }}>
+                    Determining Features
+                  </h3>
+                  <div className="space-y-2">
+                    {prediction.shapFeatures.map((f, idx) => {
+                      const isPositive = f.shap_value > 0;
+                      const cleanName = f.feature.replace('num__', '').replace('cat__', '');
+                      return (
+                        <div key={idx} className="flex justify-between items-center p-3 rounded-lg"
+                          style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '0.5px solid var(--border)' }}>
+                          <span className="text-sm font-mono" style={{ color: 'var(--foreground)' }}>
+                            {cleanName}
+                          </span>
+                          <span className="text-sm font-semibold"
+                            style={{ color: isPositive ? '#E8383A' : '#4CAF6E' }}>
+                            {isPositive ? '+' : ''}{f.shap_value.toFixed(4)}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <p className="text-xs mt-2" style={{ color: 'var(--vt-text-muted)' }}>
+                    Positive values push toward the predicted class. Negative values push away.
+                  </p>
                 </div>
-              </div>
+              )}
+
+              {prediction.probabilities && (
+                <div>
+                  <h3 className="font-semibold mb-3" style={{ color: 'var(--foreground)' }}>
+                    Class Probabilities
+                  </h3>
+                  <div className="space-y-2">
+                    {Object.entries(prediction.probabilities)
+                      .sort((a, b) => b[1] - a[1])
+                      .map(([cls, prob]) => (
+                        <div key={cls} className="flex justify-between items-center p-3 rounded-lg"
+                          style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '0.5px solid var(--border)' }}>
+                          <span className="text-sm font-mono" style={{ color: 'var(--foreground)' }}>{cls}</span>
+                          <span className="text-sm font-semibold" style={{ color: '#00B8CC' }}>
+                            {(prob * 100).toFixed(2)}%
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+
 
               {prediction.type !== 'Normal' && (
                 <div

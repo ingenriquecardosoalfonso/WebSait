@@ -1,3 +1,5 @@
+import logo from '../assets/logo.png';
+import logomark from '../assets/logomark.png';
 import { useState, useEffect } from "react";
 import { ModuleType } from "./types";
 import { Sun, Moon } from 'lucide-react';
@@ -68,13 +70,23 @@ export default function App() {
           className="p-6 flex flex-col items-center gap-3"
           style={{ borderBottom: "0.5px solid #1A1A22" }}
         >
-          <ShieldCheck className="w-10 h-10" style={{ color: "#C9B86C" }} />
-          <h1
+          {/* <ShieldCheck className="w-10 h-10" style={{ color: "#C9B86C" }} /> */}
+          <img 
+            src={isCollapsed ? logomark : logo}  
+            alt="NetSieveX logo" 
+            className="object-contain"
+            style={{ 
+              width: isCollapsed ? '64px' : '140px', 
+              height: isCollapsed ? '64px' : '140px',
+              transition: 'all 0.2s'
+            }}
+          />
+          {/* <h1
             className={`text-base font-semibold tracking-widest uppercase ${isCollapsed ? 'hidden' : 'block'}`}
             style={{ color: "#C9B86C" }}
           >
             NetSieveX.io
-          </h1>
+          </h1> */}
         </div>
 
         {/* Nav */}
@@ -206,8 +218,9 @@ export default function App() {
             color: "#4A4A5A",
           }}
         >
-          <span style={{ color: "#238ab6" }}>IoT Security Analytics Platform · Machine Learning for Attack Detection ·</span>
-          <span style={{ color: "#3b90db" }}>Simulated data for demonstration</span>
+          <span style={{ color: 'var(--vt-text-muted)' }}>
+            © 2026 The X-Stack. All Rights Reserved
+          </span>
         </footer>
       </main>
     </div>

@@ -10,11 +10,12 @@ export async function apiFetch(endpoint, options = {}) {
   }
 
   const response = await fetch(`${API_URL}${endpoint}`, {
-    method: "GET",
+    method: options.method || "GET",
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${token}`
-    }
+    },
+    body: options.body || undefined,
   });
 
   if (response.status === 401) {
