@@ -1,11 +1,14 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { NetworkFlow } from '../types';
 import { generateMockDataset } from '../mockData';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Activity, Shield, TrendingUp, Globe, CheckCircle, AlertTriangle, Sparkles } from 'lucide-react';
 
 export default function Dashboard() {
-  const [dataset] = useState<NetworkFlow[]>(() => generateMockDataset(1000));
+  const [dataset, setDataset] = useState<NetworkFlow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => { generateMockDataset().then((data) => {setDataset(data); setLoading(false); });}, []);
 
   const totalFlows = dataset.length;
   const maliciousFlows = dataset.filter(f => f.Attack_type !== 'Normal').length;

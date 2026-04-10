@@ -1,6 +1,20 @@
+import { useState } from 'react';
 import { Brain, Shield, Eye, TrendingUp, Lock, CheckCircle, AlertCircle, Lightbulb } from 'lucide-react';
 
-export default function About() {
+export default function About(): import("react/jsx-runtime").JSX.Element {
+  const [feedback, setFeedback] = useState({ name: '', email: '', message: '' });
+  const [successMessage, setSuccessMessage] = useState('');
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFeedback({ ...feedback, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSuccessMessage('Thank you for your feedback!');
+    setFeedback({ name: '', email: '', message: '' });
+  };
+
   return (
     <div className="space-y-8">
       <div>
@@ -218,6 +232,80 @@ export default function About() {
           </div>
         </div>
       </div>
+
+      <div
+  className="rounded p-6"
+  style={{ backgroundColor: 'var(--card)', border: '0.5px solid var(--border)' }}
+>
+  <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">Feedback Form</h2>
+  <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed mb-6">
+    We’d love to hear your thoughts, suggestions, or questions about NetSieveX.io.
+  </p>
+
+  <form onSubmit={handleSubmit} className="space-y-4">
+    <div>
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        Name
+      </label>
+      <input
+        type="text"
+        name="name"
+        value={feedback.name  }
+        onChange={handleChange}
+        placeholder="Enter your name"
+        required
+        className="w-full rounded-lg px-4 py-3 text-sm text-gray-800 dark:text-white bg-transparent border outline-none"
+        style={{ backgroundColor: 'var(--card)', border: '0.5px solid var(--border)' }}
+      />
+    </div>
+
+    <div>
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        Email
+      </label>
+      <input
+        type="email"
+        name="email"
+        value={feedback.email}
+        onChange={handleChange}
+        placeholder="Enter your email"
+        required
+        className="w-full rounded-lg px-4 py-3 text-sm text-gray-800 dark:text-white bg-transparent border outline-none"
+        style={{ backgroundColor: 'var(--card)', border: '0.5px solid var(--border)' }}
+      />
+    </div>
+
+    <div>
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        Message
+      </label>
+      <textarea
+        name="message"
+        value={feedback.message}
+        onChange={handleChange}
+        placeholder="Write your feedback here..."
+        rows={5}
+        required
+        className="w-full rounded-lg px-4 py-3 text-sm text-gray-800 dark:text-white bg-transparent border outline-none resize-none"
+        style={{ backgroundColor: 'var(--card)', border: '0.5px solid var(--border)' }}
+      />
+    </div>
+
+    {successMessage && (
+      <p className="text-sm font-medium text-green-600 dark:text-green-400">
+        {successMessage}
+      </p>
+    )}
+
+    <button
+      type="submit"
+      className="px-6 py-3 rounded-lg text-sm font-medium text-white shadow transition hover:opacity-90"
+      style={{ background: 'linear-gradient(to right, #2563eb, #7c3aed)' }}
+    >
+      Submit Feedback
+    </button>
+  </form>
+</div>
 
       {/* Demo Notice */}
       <div className="rounded p-6" style={{ backgroundColor: "var(--card)", border: "0.5px solid var(--border)" }}>
