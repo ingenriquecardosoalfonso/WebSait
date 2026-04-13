@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { NetworkFlow } from '../types';
 import { generateMockDataset } from '../mockData';
 import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
@@ -6,10 +6,17 @@ import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Re
 const COLORS = ["#4CAF6E", "#E8383A"];
 
 export default function Analysis() {
-  const [dataset] = useState<NetworkFlow[]>(() => generateMockDataset(800));
-  
-  const normalData = useMemo(() => dataset.filter(f => f.Attack_type === 'Normal'), [dataset]);
-  const attackData = useMemo(() => dataset.filter(f => f.Attack_type !== 'Normal'), [dataset]);
+  const [dataset, setDataset] = useState<NetworkFlow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    generateMockDataset().then((data) => {
+      setDataset(data);
+      setLoading(false);
+    });
+  }, []);
+  const normalData = useMemo(() => dataset.filter(f => f.Attack_grouped === 'Normal'), [dataset]);
+  const attackData = useMemo(() => dataset.filter(f => f.Attack_grouped !== 'Normal'), [dataset]);
   
   // Duration comparison
   const durationComparison = [
@@ -65,8 +72,8 @@ export default function Analysis() {
   const scatterData = dataset.slice(0, 200).map(f => ({
     duration: f.flow_duration,
     packets: f.fwd_pkts_tot + f.bwd_pkts_tot,
-    type: f.Attack_type === 'Normal' ? 0 : 1,
-    name: f.Attack_type,
+    type: f.Attack_grouped === 'Normal' ? 0 : 1,
+    name: f.Attack_grouped,
   }));
   
   // Down/Up ratio comparison

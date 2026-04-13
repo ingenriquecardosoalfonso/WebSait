@@ -1,15 +1,19 @@
 import { useState, useEffect, useRef } from 'react';
 import { NetworkFlow } from '../types';
 import { generateMockFlow } from '../mockData';
+import { apiFetch } from '../../services/apiService';
 import { Activity, AlertCircle, PlayCircle, PauseCircle } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
+
+
 const MAX_FLOWS = 100;
-const UPDATE_INTERVAL = 2000; // 2 seconds
+const UPDATE_INTERVAL = 2000;
 
 export default function LiveMonitor() {
   const [isRunning, setIsRunning] = useState(false);
   const [flows, setFlows] = useState<NetworkFlow[]>([]);
+  const [loadingData, setLoadingData] = useState(true);
   const [stats, setStats] = useState({
     totalFlows: 0,
     attacksDetected: 0,
@@ -17,29 +21,41 @@ export default function LiveMonitor() {
     packetsPerSec: [] as { time: string; value: number }[],
   });
   const flowCountRef = useRef(0);
-  
+  const realFlowsRef = useRef<NetworkFlow[]>([]);
+
+  // Cargar datos reales de la API al montar
+  useEffect(() => {
+  apiFetch('/api/network-flows/').then((data: NetworkFlow[]) => {
+    realFlowsRef.current = data;
+    setLoadingData(false);
+  });
+  }, []);
+
   useEffect(() => {
     if (!isRunning) return;
-    
+
     const interval = setInterval(() => {
-      // Generate new flow
-      const newFlow = generateMockFlow(flowCountRef.current++);
-      
+      const realFlows = realFlowsRef.current;
+      if (realFlows.length === 0) return;
+
+      // Tomar una fila aleatoria de los datos reales
+      const randomRow = realFlows[Math.floor(Math.random() * realFlows.length)];
+      const newFlow = generateMockFlow(randomRow);
+
       setFlows(prevFlows => {
         const updated = [newFlow, ...prevFlows].slice(0, MAX_FLOWS);
         return updated;
       });
-      
-      // Update stats
+
       setStats(prevStats => {
-        const isAttack = newFlow.Attack_type !== 'Normal';
+        const isAttack = newFlow.Attack_grouped !== 'Normal';
         const now = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        
+
         const newPacketsData = [
           ...prevStats.packetsPerSec,
           { time: now, value: newFlow.flow_pkts_per_sec }
-        ].slice(-20); // Keep last 20 data points
-        
+        ].slice(-20);
+
         return {
           totalFlows: prevStats.totalFlows + 1,
           attacksDetected: prevStats.attacksDetected + (isAttack ? 1 : 0),
@@ -48,14 +64,14 @@ export default function LiveMonitor() {
         };
       });
     }, UPDATE_INTERVAL);
-    
+
     return () => clearInterval(interval);
   }, [isRunning]);
-  
+
   const handleToggle = () => {
     setIsRunning(!isRunning);
   };
-  
+
   const handleReset = () => {
     setIsRunning(false);
     setFlows([]);
@@ -67,11 +83,11 @@ export default function LiveMonitor() {
     });
     flowCountRef.current = 0;
   };
-  
+
   const detectionRate = stats.totalFlows > 0
     ? ((stats.attacksDetected / stats.totalFlows) * 100).toFixed(1)
     : '0.0';
-  
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -82,13 +98,21 @@ export default function LiveMonitor() {
         <div className="flex gap-3">
           <button
             onClick={handleToggle}
+            disabled={loadingData}
             className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-colors ${
-              isRunning
+              loadingData
+                ? 'bg-gray-400 text-white cursor-not-allowed'
+                : isRunning
                 ? 'bg-yellow-600 text-white hover:bg-yellow-700'
                 : 'bg-green-600 text-white hover:bg-green-700'
             }`}
           >
-            {isRunning ? (
+            {loadingData ? (
+              <>
+                <Activity className="w-5 h-5 animate-spin" />
+                Loading...
+              </>
+            ) : isRunning ? (
               <>
                 <PauseCircle className="w-5 h-5" />
                 Pause
@@ -108,7 +132,7 @@ export default function LiveMonitor() {
           </button>
         </div>
       </div>
-      
+
       {/* Status Indicator */}
       <div className={`p-4 rounded-lg border-2 ${
         isRunning ? 'bg-green-50 border-green-500' : 'bg-gray-50 border-gray-300'
@@ -125,7 +149,7 @@ export default function LiveMonitor() {
           )}
         </div>
       </div>
-      
+
       {/* Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-white p-6 rounded-lg shadow">
@@ -137,7 +161,7 @@ export default function LiveMonitor() {
             <Activity className="w-10 h-10 text-blue-500" />
           </div>
         </div>
-        
+
         <div className="bg-white p-6 rounded-lg shadow">
           <div className="flex items-center justify-between">
             <div>
@@ -147,7 +171,7 @@ export default function LiveMonitor() {
             <AlertCircle className="w-10 h-10 text-red-500" />
           </div>
         </div>
-        
+
         <div className="bg-white p-6 rounded-lg shadow">
           <div className="flex items-center justify-between">
             <div>
@@ -157,7 +181,7 @@ export default function LiveMonitor() {
             <Activity className="w-10 h-10 text-green-500" />
           </div>
         </div>
-        
+
         <div className="bg-white p-6 rounded-lg shadow">
           <div className="flex items-center justify-between">
             <div>
@@ -168,7 +192,7 @@ export default function LiveMonitor() {
           </div>
         </div>
       </div>
-      
+
       {/* Live Chart */}
       {stats.packetsPerSec.length > 0 && (
         <div className="bg-white p-6 rounded-lg shadow">
@@ -184,7 +208,7 @@ export default function LiveMonitor() {
           </ResponsiveContainer>
         </div>
       )}
-      
+
       {/* Flow Stream */}
       <div className="bg-white rounded-lg shadow">
         <div className="p-6 border-b">
@@ -199,7 +223,7 @@ export default function LiveMonitor() {
           ) : (
             <div className="divide-y">
               {flows.map((flow) => {
-                const isAttack = flow.Attack_type !== 'Normal';
+                const isAttack = flow.Attack_grouped !== 'Normal';
                 return (
                   <div
                     key={flow.id}
@@ -234,7 +258,7 @@ export default function LiveMonitor() {
                           <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
                             isAttack ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
                           }`}>
-                            {flow.Attack_type}
+                            {flow.Attack_grouped}
                           </span>
                         </div>
                       </div>
