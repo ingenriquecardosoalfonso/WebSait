@@ -1,7 +1,7 @@
 export interface NetworkFlow {
   id: string;
   timestamp: Date;
-  proto: 'tcp' | 'udp' | 'icmp';
+  proto:string;
   service: string;
   flow_duration: number;
   flow_pkts_per_sec: number;
@@ -19,7 +19,7 @@ export interface NetworkFlow {
   fwd_init_window_size: number;
   bwd_init_window_size: number;
   down_up_ratio: number;
-  Attack_type: string;
+  Attack_grouped: string;
 }
 
 export type ModuleType = 'DASHBOARD' | 'ML_TRAINING' | 'DETECTOR' | 'DATA_EXPLORER' | 'ANALYSIS' | 'LIVE_MONITOR' | 'ABOUT';

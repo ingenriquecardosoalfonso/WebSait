@@ -1,3 +1,5 @@
+import logo from '../assets/logo.png';
+import logomark from '../assets/logomark.png';
 import { useState, useEffect } from "react";
 import { ModuleType } from "./types";
 import { Sun, Moon } from 'lucide-react';
@@ -68,13 +70,23 @@ export default function App() {
           className="p-6 flex flex-col items-center gap-3"
           style={{ borderBottom: "0.5px solid #1A1A22" }}
         >
-          <ShieldCheck className="w-10 h-10" style={{ color: "#C9B86C" }} />
-          <h1
+          {/* <ShieldCheck className="w-10 h-10" style={{ color: "#C9B86C" }} /> */}
+          <img 
+            src={isCollapsed ? logomark : logo}  
+            alt="NetSieveX logo" 
+            className="object-contain"
+            style={{ 
+              width: isCollapsed ? '64px' : '140px', 
+              height: isCollapsed ? '64px' : '140px',
+              transition: 'all 0.2s'
+            }}
+          />
+          {/* <h1
             className={`text-base font-semibold tracking-widest uppercase ${isCollapsed ? 'hidden' : 'block'}`}
             style={{ color: "#C9B86C" }}
           >
             NetSieveX.io
-          </h1>
+          </h1> */}
         </div>
 
         {/* Nav */}
@@ -120,11 +132,11 @@ export default function App() {
           </div>
         </nav>
 
-        {/* Footer sidebar 123*/}
-        <div className="p-3 flex flex-col items-center gap-2" style={{ borderTop: "0.5px solid #2A2A35" }}>
-          <p className="text-xs text-center" style={{ color: "#4A4A5A" }}>
-            The X-Stack v.1.0
-          </p>
+        {/* Footer sidebar */}
+        <div className="p-3 flex justify-center" style={{ borderTop: "0.5px solid #2A2A35" }}>
+          {/* <p className="text-xs text-center" style={{ color: "#4A4A5A" }}>
+            Velocity TDIR · v2.1
+          </p> */}
           <button
             onClick={() => setIsDark(!isDark)}
             className="flex items-center rounded-full transition-all duration-300 overflow-hidden"
@@ -200,13 +212,15 @@ export default function App() {
 
         {/* Footer */}
         <footer
-          className="px-6 py-4 text-center text-xs text-muted-foreground"
+          className="px-6 py-4 text-center text-xs"
           style={{
             borderTop: "0.5px solid #2A2A35",
+            color: "#4A4A5A",
           }}
         >
-          IoT Security Analytics Platform · Machine Learning for Attack Detection ·{" "}
-          <span className = "text-muted-foreground">Simulated data for demonstration</span>
+          <span style={{ color: 'var(--vt-text-muted)' }}>
+            © 2026 The X-Stack. All Rights Reserved
+          </span>
         </footer>
       </main>
     </div>
