@@ -17,44 +17,20 @@ function randomFloat(min: number, max: number): number {
   return Math.random() * (max - min) + min;
 }
 
-export function generateMockFlow(id: number, attackType?: string): NetworkFlow {
-  const isAttack = attackType !== 'Normal';
-  const proto = randomChoice(PROTOCOLS);
-  const service = randomChoice(SERVICES);
+export function generateMockFlow(row: NetworkFlow = {} as NetworkFlow): NetworkFlow {
+  const proto = row.proto;
+  const service = row.service;
   
-  // Normal traffic patterns
-  let flow_duration = randomFloat(0.1, 120);
-  let fwd_pkts_tot = randomInt(5, 100);
-  let bwd_pkts_tot = randomInt(3, 80);
-  let flow_pkts_per_sec = (fwd_pkts_tot + bwd_pkts_tot) / flow_duration;
-  let payload_bytes_per_second = randomFloat(100, 5000);
-  let flow_SYN_flag_count = proto === 'tcp' ? randomInt(1, 3) : 0;
-  let flow_ACK_flag_count = proto === 'tcp' ? randomInt(5, 50) : 0;
-  let flow_RST_flag_count = proto === 'tcp' ? randomInt(0, 2) : 0;
-  let flow_FIN_flag_count = proto === 'tcp' ? randomInt(0, 2) : 0;
-  
-  // Attack patterns modify the metrics
-  if (isAttack) {
-    if (attackType === 'DDoS' || attackType === 'DoS') {
-      flow_pkts_per_sec = randomFloat(1000, 10000);
-      fwd_pkts_tot = randomInt(500, 5000);
-      payload_bytes_per_second = randomFloat(10000, 100000);
-      flow_SYN_flag_count = proto === 'tcp' ? randomInt(50, 500) : 0;
-      flow_RST_flag_count = proto === 'tcp' ? randomInt(20, 200) : 0;
-    } else if (attackType === 'Reconnaissance') {
-      flow_duration = randomFloat(0.01, 1);
-      fwd_pkts_tot = randomInt(1, 5);
-      bwd_pkts_tot = randomInt(0, 2);
-      flow_SYN_flag_count = proto === 'tcp' ? randomInt(1, 2) : 0;
-      flow_RST_flag_count = proto === 'tcp' ? randomInt(1, 2) : 0;
-    } else if (attackType === 'Mirai') {
-      flow_duration = randomFloat(10, 300);
-      fwd_pkts_tot = randomInt(200, 1000);
-      payload_bytes_per_second = randomFloat(5000, 50000);
-      flow_SYN_flag_count = proto === 'tcp' ? randomInt(10, 100) : 0;
-    }
-  }
-  
+  let flow_duration = row.flow_duration;
+  let fwd_pkts_tot = row.fwd_pkts_tot;
+  let bwd_pkts_tot = row.bwd_pkts_tot;
+  let flow_pkts_per_sec = row.flow_pkts_per_sec ;
+  let payload_bytes_per_second = row.payload_bytes_per_second;
+  let flow_SYN_flag_count = row.flow_SYN_flag_count;
+  let flow_ACK_flag_count = row.flow_ACK_flag_count;
+  let flow_RST_flag_count = row.flow_RST_flag_count;
+  let flow_FIN_flag_count = row.flow_FIN_flag_count;
+
   const fwd_pkts_payload_avg = payload_bytes_per_second / (fwd_pkts_tot / flow_duration);
   const bwd_pkts_payload_avg = payload_bytes_per_second * 0.7 / (bwd_pkts_tot / flow_duration);
   const fwd_iat_avg = flow_duration / fwd_pkts_tot;
@@ -62,7 +38,7 @@ export function generateMockFlow(id: number, attackType?: string): NetworkFlow {
   const down_up_ratio = bwd_pkts_tot / fwd_pkts_tot;
   
   return {
-    id: `flow-${id}`,
+    id: `flow-${row.id}`,
     timestamp: new Date(Date.now() - randomInt(0, 86400000)),
     proto,
     service,
@@ -79,10 +55,10 @@ export function generateMockFlow(id: number, attackType?: string): NetworkFlow {
     flow_ACK_flag_count,
     flow_RST_flag_count,
     flow_FIN_flag_count,
-    fwd_init_window_size: randomInt(1024, 65535),
-    bwd_init_window_size: randomInt(1024, 65535),
+    fwd_init_window_size: row.fwd_init_window_size,
+    bwd_init_window_size: row.bwd_init_window_size,
     down_up_ratio,
-    Attack_type: attackType || randomChoice(ATTACK_TYPES),
+    Attack_grouped: row.Attack_grouped,
   };
 }
 
@@ -100,17 +76,12 @@ export async function generateMockDataset(): Promise<NetworkFlow[]> {
   const attackCount = (datagrouppercentage as Metric[]).find(l => l.traffic_class === 'Attack')?.total_rows ?? 0;
   const normalCount = (datagrouppercentage as Metric[]).find(l => l.traffic_class === 'Normal')?.total_rows ?? 0;
 
-  for (let i = 0; i < normalCount; i++) {
-    dataset.push(generateMockFlow(i, 'Normal'));
-  }
+  const dataflow = await apiFetch('/api/network-flows/');
+  const dataRows = (dataflow as NetworkFlow[]);
   
-  const attackTypes = ATTACK_TYPES.filter(t => t !== 'Normal');
-  for (let i = 0; i < attackCount; i++) {
-    const attackType = randomChoice(attackTypes);
-    dataset.push(generateMockFlow(normalCount + i, attackType));
-  }
-  
-  // Shuffle
+  dataRows.forEach((row, i) => {
+    dataset.push(generateMockFlow(row!));
+  });
   return dataset.sort(() => Math.random() - 0.5);
 }
 

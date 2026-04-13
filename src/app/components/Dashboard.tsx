@@ -11,11 +11,11 @@ export default function Dashboard() {
   useEffect(() => { generateMockDataset().then((data) => {setDataset(data); setLoading(false); });}, []);
 
   const totalFlows = dataset.length;
-  const maliciousFlows = dataset.filter(f => f.Attack_type !== 'Normal').length;
+  const maliciousFlows =  dataset.filter(f => f.Attack_grouped != 'Normal').length;
   const maliciousPercent = ((maliciousFlows / totalFlows) * 100).toFixed(1);
+  const suma = dataset.reduce((sum, f) => sum + (Number(f.flow_pkts_per_sec) || 0), 0);
   const avgPacketRate = (dataset.reduce((sum, f) => sum + f.flow_pkts_per_sec, 0) / totalFlows).toFixed(2);
   const avgDuration = (dataset.reduce((sum, f) => sum + f.flow_duration, 0) / totalFlows).toFixed(2);
-
   const networkStatus = parseFloat(maliciousPercent) < 5 ? 'Normal' : parseFloat(maliciousPercent) < 15 ? 'Warning' : 'Critical';
   const StatusIconComponent = networkStatus === 'Normal' ? CheckCircle : AlertTriangle;
 
@@ -31,7 +31,7 @@ export default function Dashboard() {
     .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
     .reduce((acc: any[], flow, idx) => {
       if (idx % 50 === 0) {
-        const maliciousCount = dataset.slice(Math.max(0, idx - 100), idx + 1).filter(f => f.Attack_type !== 'Normal').length;
+        const maliciousCount = dataset.slice(Math.max(0, idx - 100), idx + 1).filter(f => f.Attack_grouped !== 'Normal').length;
         const totalCount = Math.min(100, idx + 1);
         acc.push({
           time: flow.timestamp.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),

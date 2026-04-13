@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { NetworkFlow } from '../types';
 import { generateMockDataset } from '../mockData';
 import { Search, Download, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -6,7 +6,15 @@ import { Search, Download, ChevronLeft, ChevronRight } from 'lucide-react';
 const ITEMS_PER_PAGE = 20;
 
 export default function DataExplorer() {
-  const [dataset] = useState<NetworkFlow[]>(() => generateMockDataset(500));
+  const [dataset, setDataset] = useState<NetworkFlow[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+    useEffect(() => {
+      generateMockDataset().then((data) => {
+        setDataset(data);
+        setLoading(false);
+      });
+    }, []);
   const [currentPage, setCurrentPage] = useState(1);
   const [filters, setFilters] = useState({
     proto: 'all',
@@ -21,7 +29,7 @@ export default function DataExplorer() {
   }, [dataset]);
 
   const uniqueAttackTypes = useMemo(() => {
-    return Array.from(new Set(dataset.map(f => f.Attack_type))).sort();
+    return Array.from(new Set(dataset.map(f => f.Attack_grouped))).sort();
   }, [dataset]);
 
   // Filter data
@@ -29,7 +37,7 @@ export default function DataExplorer() {
     return dataset.filter(flow => {
       if (filters.proto !== 'all' && flow.proto !== filters.proto) return false;
       if (filters.service !== 'all' && flow.service !== filters.service) return false;
-      if (filters.attackType !== 'all' && flow.Attack_type !== filters.attackType) return false;
+      if (filters.attackType !== 'all' && flow.Attack_grouped !== filters.attackType) return false;
       if (filters.searchTerm && !flow.id.toLowerCase().includes(filters.searchTerm.toLowerCase())) return false;
       return true;
     });
@@ -56,9 +64,9 @@ export default function DataExplorer() {
 
   const handleExport = () => {
     const csv = [
-      'ID,Timestamp,Protocol,Service,Duration,Attack_Type,Fwd_Pkts,Bwd_Pkts,Pkts_Per_Sec,Payload_Bytes_Per_Sec',
+      'ID,Timestamp,Protocol,Service,Duration,Attack_grouped,Fwd_Pkts,Bwd_Pkts,Pkts_Per_Sec,Payload_Bytes_Per_Sec',
       ...filteredData.map(f =>
-        `${f.id},${f.timestamp.toISOString()},${f.proto},${f.service},${f.flow_duration},${f.Attack_type},${f.fwd_pkts_tot},${f.bwd_pkts_tot},${f.flow_pkts_per_sec.toFixed(2)},${f.payload_bytes_per_second.toFixed(2)}`
+        `${f.id},${f.timestamp.toISOString()},${f.proto},${f.service},${f.flow_duration},${f.Attack_grouped},${f.fwd_pkts_tot},${f.bwd_pkts_tot},${f.flow_pkts_per_sec.toFixed(2)},${f.payload_bytes_per_second.toFixed(2)}`
       )
     ].join('\n');
 
@@ -304,7 +312,7 @@ export default function DataExplorer() {
                     <span
                       className="px-2 py-1 rounded text-xs font-semibold"
                       style={
-                        flow.Attack_type === 'Normal'
+                        flow.Attack_grouped === 'Normal'
                           ? {
                               backgroundColor: 'rgba(76,175,110,0.08)',
                               color: '#4CAF6E',
@@ -317,7 +325,7 @@ export default function DataExplorer() {
                             }
                       }
                     >
-                      {flow.Attack_type}
+                      {flow.Attack_grouped}
                     </span>
                   </td>
                 </tr>
