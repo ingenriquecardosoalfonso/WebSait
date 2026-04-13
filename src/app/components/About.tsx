@@ -68,23 +68,16 @@ export default function About(): import("react/jsx-runtime").JSX.Element {
             </div>
             
             <div className="rounded p-6" style={{ backgroundColor: "var(--card)", border: "0.5px solid var(--border)" }}>
-              <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">🧠 Neural Networks</h3>
+              <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">🧠 KNN (K-Nearest Neighbors)</h3>
               <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
-                Deep learning models that identify complex patterns in network traffic for advanced threat detection.
+                Non-parametric method for classification and regression that considers the k most similar instances.
               </p>
             </div>
             
             <div className="rounded p-6" style={{ backgroundColor: "var(--card)", border: "0.5px solid var(--border)" }}>
-              <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">📊 Gradient Boosting</h3>
+              <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">🎯 Decision Tree </h3>
               <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
-                Powerful ensemble technique that combines weak learners to create highly accurate predictions.
-              </p>
-            </div>
-            
-            <div className="rounded p-6" style={{ backgroundColor: "var(--card)", border: "0.5px solid var(--border)" }}>
-              <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">🎯 SVM (Support Vector Machine)</h3>
-              <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
-                Effective classification algorithm for separating normal traffic from attack patterns.
+                Tree-based model that splits data based on feature values to make predictions, ideal for interpretability.
               </p>
             </div>
           </div>
