@@ -82,7 +82,16 @@ export function useDetector() {
     confidence:    number;
     riskLevel:     'low' | 'medium' | 'high';
     probabilities: Record<string, number> | null;
-    shapFeatures:  { feature: string; shap_value: number }[];
+    shapFeatures: {
+        feature: string;
+        feature_name: string;
+        description: string;
+        description_negative: string;
+        description_positive: string;
+        predicted_class: string;
+        shap_value: number;
+        state: boolean;
+      }[];
   } | null>(null);
 
   // ── Input change ────────────────────────────────────────────
@@ -241,8 +250,6 @@ export function useDetector() {
       };
 
       const response = await predictFlow(payload);
-      console.log('API response:', response);
-      console.log('shap_features:', response.shap_features); 
       setPrediction({
         type:          response.prediction,
         confidence:    response.confidence,
@@ -250,7 +257,6 @@ export function useDetector() {
          : response.risk_level.toLowerCase() as 'low' | 'medium' | 'high',
         probabilities: response.probabilities ?? null,
         shapFeatures:  response.shap_features ?? [],
-        modelUsed:     response.model,
       });
 
     } catch (err) {

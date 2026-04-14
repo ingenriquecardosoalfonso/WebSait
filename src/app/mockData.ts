@@ -1,98 +1,34 @@
 import { NetworkFlow } from './types';
 import { apiFetch } from '../services/apiService';
 
-const ATTACK_TYPES = ['Normal', 'DDoS', 'DoS', 'Reconnaissance', 'Theft', 'Mirai'];
-const PROTOCOLS: ('tcp' | 'udp' | 'icmp')[] = ['tcp', 'udp', 'icmp'];
-const SERVICES = ['http', 'https', 'dns', 'ssh', 'ftp', 'smtp', 'telnet', 'ntp', 'snmp', 'mqtt'];
-
-function randomChoice<T>(array: T[]): T {
-  return array[Math.floor(Math.random() * array.length)];
-}
-
 function randomInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function randomFloat(min: number, max: number): number {
-  return Math.random() * (max - min) + min;
-}
+export function generateMockFlow(row: NetworkFlow): NetworkFlow {
+  const { fwd_pkts_tot, bwd_pkts_tot, flow_duration, payload_bytes_per_second } = row;
 
-export function generateMockFlow(row: NetworkFlow = {} as NetworkFlow): NetworkFlow {
-  const proto = row.proto;
-  const service = row.service;
-  
-  let flow_duration = row.flow_duration;
-  let fwd_pkts_tot = row.fwd_pkts_tot;
-  let bwd_pkts_tot = row.bwd_pkts_tot;
-  let flow_pkts_per_sec = row.flow_pkts_per_sec ;
-  let payload_bytes_per_second = row.payload_bytes_per_second;
-  let flow_SYN_flag_count = row.flow_SYN_flag_count;
-  let flow_ACK_flag_count = row.flow_ACK_flag_count;
-  let flow_RST_flag_count = row.flow_RST_flag_count;
-  let flow_FIN_flag_count = row.flow_FIN_flag_count;
-
-  const fwd_pkts_payload_avg = payload_bytes_per_second / (fwd_pkts_tot / flow_duration);
-  const bwd_pkts_payload_avg = payload_bytes_per_second * 0.7 / (bwd_pkts_tot / flow_duration);
-  const fwd_iat_avg = flow_duration / fwd_pkts_tot;
-  const bwd_iat_avg = flow_duration / bwd_pkts_tot;
-  const down_up_ratio = bwd_pkts_tot / fwd_pkts_tot;
-  
   return {
+    ...row,
     id: `flow-${row.id}`,
     timestamp: new Date(Date.now() - randomInt(0, 86400000)),
-    proto,
-    service,
-    flow_duration,
-    flow_pkts_per_sec,
-    payload_bytes_per_second,
-    fwd_pkts_tot,
-    bwd_pkts_tot,
-    fwd_pkts_payload_avg,
-    bwd_pkts_payload_avg,
-    fwd_iat_avg,
-    bwd_iat_avg,
-    flow_SYN_flag_count,
-    flow_ACK_flag_count,
-    flow_RST_flag_count,
-    flow_FIN_flag_count,
-    fwd_init_window_size: row.fwd_init_window_size,
-    bwd_init_window_size: row.bwd_init_window_size,
-    down_up_ratio,
-    Attack_grouped: row.Attack_grouped,
+    fwd_pkts_payload_avg: payload_bytes_per_second / (fwd_pkts_tot / flow_duration),
+    bwd_pkts_payload_avg: (payload_bytes_per_second * 0.7) / (bwd_pkts_tot / flow_duration),
+    fwd_iat_avg: flow_duration / fwd_pkts_tot,
+    bwd_iat_avg: flow_duration / bwd_pkts_tot,
+    down_up_ratio: bwd_pkts_tot / fwd_pkts_tot,
   };
 }
 
 export async function generateMockDataset(): Promise<NetworkFlow[]> {
-  let size = 900; 
-  const datametrics = await apiFetch('/api/metrics/');
-  const datametricsrow = Array.isArray(datametrics) ? datametrics[0] : datametrics;
-    if (datametricsrow?.totalFlows && typeof datametricsrow.totalFlows === 'number') {
-      size = datametricsrow.totalFlows;
-    }
-  const dataset: NetworkFlow[] = [];
-  interface Metric {  traffic_class: string; total_rows: number; percentage: number; }
-
-  const datagrouppercentage = await apiFetch('/api/metrics/groupPercentage');
-  const attackCount = (datagrouppercentage as Metric[]).find(l => l.traffic_class === 'Attack')?.total_rows ?? 0;
-  const normalCount = (datagrouppercentage as Metric[]).find(l => l.traffic_class === 'Normal')?.total_rows ?? 0;
-
   const dataflow = await apiFetch('/api/network-flows/');
-  const dataRows = (dataflow as NetworkFlow[]);
-  
-  dataRows.forEach((row, i) => {
-    dataset.push(generateMockFlow(row!));
-  });
+  const dataset = (dataflow as NetworkFlow[]).map((row) => generateMockFlow(row));
   return dataset.sort(() => Math.random() - 0.5);
 }
 
-export function generateMockMetrics(): {
-  accuracy: number;
-  precision: number;
-  recall: number;
-  f1Score: number;
-  confusionMatrix: number[][];
-  featureImportance: { feature: string; importance: number }[];
-} {
+export function generateMockMetrics() {
+  const randomFloat = (min: number, max: number) => Math.random() * (max - min) + min;
+
   return {
     accuracy: randomFloat(0.92, 0.98),
     precision: randomFloat(0.90, 0.97),
