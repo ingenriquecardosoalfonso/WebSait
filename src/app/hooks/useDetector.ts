@@ -252,6 +252,7 @@ export function useDetector() {
         shapFeatures:  response.shap_features ?? [],
         modelUsed:     response.model,
       });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
 
     } catch (err) {
       console.error('Prediction error:', err);

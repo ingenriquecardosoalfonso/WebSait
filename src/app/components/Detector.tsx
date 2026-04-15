@@ -1,4 +1,4 @@
-import { Activity, Upload, FileSpreadsheet } from 'lucide-react';
+import { Activity, Upload, FileSpreadsheet, Download } from 'lucide-react';
 import { useDetector, riskStyles } from '../hooks/useDetector';
 
 export default function Detector() {
@@ -48,12 +48,29 @@ const formatPrediction = (type: string) => {
           className="rounded p-6"
           style={{ backgroundColor: 'var(--card)', border: '0.5px solid var(--border)' }}
         >
+        <div className="flex items-center justify-between mb-4">
           <h2
             className="text-xs font-medium tracking-widest uppercase mb-4"
             style={{ color: '#8A8A9A' }}
           >
             Flow Characteristics
           </h2>
+
+            <a
+              href="/Instruction File.xlsx"
+              download="Instruction File.xlsx"
+              className="flex items-center gap-2 px-3 py-2 rounded text-sm font-medium transition-colors"
+              style={{
+                backgroundColor: 'var(--vt-gold)',
+                border: '0.5px solid var(--border)',
+                color: 'var(--sidebar)',
+                textDecoration: 'none',
+              }}
+            >
+              <Download className="w-4 h-4" />
+              Download Instructions
+            </a>
+          </div>
 
           <div className="mb-6 pb-4" style={{ borderBottom: '0.5px solid var(--border)' }}>
             <label className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
