@@ -1041,6 +1041,7 @@ const formatPrediction = (type: string) => {
           {prediction ? (
             <div className="space-y-6">
               <div className="text-center py-8" style={{ borderBottom: '0.5px solid var(--border)' }}>
+                
                 <div className="flex justify-center mb-4">
                   {RiskIcon && <RiskIcon className="w-16 h-16" style={{ color: currentRiskStyle?.text }} />}
                 </div>
@@ -1048,6 +1049,9 @@ const formatPrediction = (type: string) => {
                 <h3 className="text-2xl font-semibold mb-2" style={{ color: 'var(--foreground)' }}>
                   {formatPrediction(prediction.type)}
                 </h3>
+                <p className="text-xs mb-3" style={{ color: 'var(--vt-text-muted)' }}>
+                  Analyzed by {ML_MODELS.find(m => m.value === prediction.modelUsed)?.label ?? prediction.modelUsed}
+                </p>
                 <span
                   className="inline-block px-4 py-2 rounded-lg text-sm font-semibold"
                   style={{
