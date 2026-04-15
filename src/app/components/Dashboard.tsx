@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { NetworkFlow } from '../types';
 import { generateMockDataset } from '../mockData';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Pie, PieChart, Cell } from 'recharts';
+import { Legend, ResponsiveContainer, Pie, PieChart, Cell } from 'recharts';
 import { Activity, Shield, TrendingUp, Globe, CheckCircle, AlertTriangle, Sparkles } from 'lucide-react';
 
 export default function Dashboard() {
@@ -13,7 +13,6 @@ export default function Dashboard() {
   const totalFlows = dataset.length;
   const maliciousFlows =  dataset.filter(f => f.Attack_grouped != 'Normal').length;
   const maliciousPercent = ((maliciousFlows / totalFlows) * 100).toFixed(1);
-  const suma = dataset.reduce((sum, f) => sum + (Number(f.flow_pkts_per_sec) || 0), 0);
   const avgPacketRate = (dataset.reduce((sum, f) => sum + f.flow_pkts_per_sec, 0) / totalFlows).toFixed(2);
   const avgDuration = (dataset.reduce((sum, f) => sum + f.flow_duration, 0) / totalFlows).toFixed(2);
   const networkStatus = parseFloat(maliciousPercent) < 5 ? 'Normal' : parseFloat(maliciousPercent) < 15 ? 'Warning' : 'Critical';
