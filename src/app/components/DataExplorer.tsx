@@ -64,9 +64,9 @@ export default function DataExplorer() {
 
   const handleExport = () => {
     const csv = [
-      'ID,Timestamp,Protocol,Service,Duration,Attack_grouped,Fwd_Pkts,Bwd_Pkts,Pkts_Per_Sec,Payload_Bytes_Per_Sec',
+      'ID,Protocol,Service,Duration,Attack_grouped,Fwd_Pkts,Bwd_Pkts,Pkts_Per_Sec,Payload_Bytes_Per_Sec',
       ...filteredData.map(f =>
-        `${f.id},${f.timestamp.toISOString()},${f.proto},${f.service},${f.flow_duration},${f.Attack_grouped},${f.fwd_pkts_tot},${f.bwd_pkts_tot},${f.flow_pkts_per_sec.toFixed(2)},${f.payload_bytes_per_second.toFixed(2)}`
+        `${f.id},${f.proto},${f.service},${f.flow_duration},${f.Attack_grouped},${f.fwd_pkts_tot},${f.bwd_pkts_tot},${f.flow_pkts_per_sec.toFixed(2)},${f.payload_bytes_per_second.toFixed(2)}`
       )
     ].join('\n');
 
@@ -257,7 +257,6 @@ export default function DataExplorer() {
             >
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase" style={{ color: '#8A8A9A' }}>ID</th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase" style={{ color: '#8A8A9A' }}>Timestamp</th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase" style={{ color: '#8A8A9A' }}>Proto</th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase" style={{ color: '#8A8A9A' }}>Service</th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase" style={{ color: '#8A8A9A' }}>Duration</th>
@@ -277,9 +276,6 @@ export default function DataExplorer() {
                 >
                   <td className="px-4 py-3 text-sm font-mono" style={{ color: 'var(--foreground)' }}>
                     {flow.id}
-                  </td>
-                  <td className="px-4 py-3 text-sm" style={{ color: 'var(--foreground)' }}>
-                    {flow.timestamp.toLocaleString('es-ES')}
                   </td>
                   <td className="px-4 py-3 text-sm">
                     <span
