@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { NetworkFlow } from '../types';
 import { generateMockDataset } from '../mockData';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Pie, PieChart, Cell } from 'recharts';
 import { Activity, Shield, TrendingUp, Globe, CheckCircle, AlertTriangle, Sparkles } from 'lucide-react';
 
 export default function Dashboard() {
@@ -27,21 +27,48 @@ export default function Dashboard() {
   };
   const s = statusStyles[networkStatus];
 
-  const timeSeriesData = dataset
-    .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
-    .reduce((acc: any[], flow, idx) => {
-      if (idx % 50 === 0) {
-        const maliciousCount = dataset.slice(Math.max(0, idx - 100), idx + 1).filter(f => f.Attack_grouped !== 'Normal').length;
-        const totalCount = Math.min(100, idx + 1);
-        acc.push({
-          time: flow.timestamp.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-          packets: flow.flow_pkts_per_sec,
-          bytes: flow.payload_bytes_per_second,
-          status: (maliciousCount / totalCount) * 100,
-        });
-      }
-      return acc;
-    }, []);
+  const totalRecords = dataset.length;
+
+  const counts = dataset.reduce((acc: { [key: string]: number }, flow) => {
+    const type = flow.Attack_grouped;
+    acc[type] = (acc[type] || 0) + 1;
+    return acc;
+  }, {});
+
+  const data = Object.entries(counts).map(([name, count]) => {
+    const colorMap: { [key: string]: string } = {
+      'Normal': '#00B8CC',
+      'DOS_SYN_Hping': '#E67E22',
+      'ARP_poisioning': '#1A5276',
+      'NMAP': '#1D8348'
+    };
+
+    return {
+      name: name,
+      value: parseFloat(((count as number / totalRecords) * 100).toFixed(2)),
+      color: colorMap[name] || '#8884d8'
+    };
+  }).sort((a, b) => b.value - a.value);
+
+  const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+    const x = cx + radius * Math.cos(-midAngle * (Math.PI / 180));
+    const y = cy + radius * Math.sin(-midAngle * (Math.PI / 180));
+
+    return (
+      <text 
+        x={x} 
+        y={y} 
+        fill="white" 
+        textAnchor="middle" 
+        dominantBaseline="central"
+        fontSize={12}
+        fontWeight="bold"
+      >
+        {`${(percent * 100).toFixed(2)}%`}
+      </text>
+    );
+  };
 
   const recommendations = [
     {
@@ -67,7 +94,6 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
 
-      {/* Header */}
       <div>
         <h1
           className="text-2xl font-semibold tracking-wide text-foreground"
@@ -140,29 +166,34 @@ export default function Dashboard() {
             className="text-xs font-medium tracking-widest uppercase mb-4"
             style={{ color: '#8A8A9A' }}
           >
-            Traffic Over Time
+            Traffic Class Distribution
           </h2>
           <ResponsiveContainer width="100%" height={420}>
-            <LineChart data={timeSeriesData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#2A2A35" />
-              <XAxis dataKey="time" stroke="#4A4A5A" tick={{ fill: '#8A8A9A', fontSize: 11 }} />
-              <YAxis yAxisId="left"   stroke="#4A4A5A" tick={{ fill: '#8A8A9A', fontSize: 11 }} />
-              <YAxis yAxisId="right"  stroke="#4A4A5A" tick={{ fill: '#8A8A9A', fontSize: 11 }} orientation="right" />
-              <YAxis yAxisId="status" orientation="right" domain={[0, 100]} hide />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'var(--card)',
-                  border: '0.5px solid var(--border)',
-                  borderRadius: '4px',
-                  color: '#C8CDD8',
-                  fontSize: 12,
-                }}
+            <PieChart>
+              <Pie
+                data={data}
+                cx="50%"
+                cy="50%"
+                labelLine={false} 
+                label={renderCustomizedLabel} 
+                innerRadius={0} 
+                outerRadius={140}
+                paddingAngle={2}
+                dataKey="value"
+                stroke="var(--card)"
+                strokeWidth={2}
+              >
+                {data.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Legend 
+                layout="vertical" 
+                align="right" 
+                verticalAlign="middle"
+                wrapperStyle={{ color: '#8A8A9A', fontSize: 12, paddingLeft: '20px' }} 
               />
-              <Legend wrapperStyle={{ color: '#8A8A9A', fontSize: 12 }} />
-              <Line yAxisId="left"   type="monotone" dataKey="packets" stroke="#00B8CC" name="Packets/s"      strokeWidth={1.5} dot={false} />
-              <Line yAxisId="right"  type="monotone" dataKey="bytes"   stroke="#4CAF6E" name="Bytes/s"        strokeWidth={1.5} dot={false} />
-              <Line yAxisId="status" type="monotone" dataKey="status"  stroke="#E8383A" name="Threat Level %" strokeWidth={1.5} dot={false} />
-            </LineChart>
+            </PieChart>
           </ResponsiveContainer>
         </div>
 
