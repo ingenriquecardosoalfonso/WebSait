@@ -72,7 +72,7 @@ export const riskStyles = {
   },
 };
 
-export function useDetector() {
+export function useDetector(onAnalyzeComplete?: () => void) {
   const [formData, setFormData]               = useState<FormDataType>(createInitialFormData());
   const [selectedModel, setSelectedModel]     = useState('random_forest');
   const [excelData, setExcelData]             = useState('');
@@ -266,6 +266,7 @@ export function useDetector() {
         modelUsed:     response.model,
       });
       window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (onAnalyzeComplete) onAnalyzeComplete(); 
 
     } catch (err) {
       console.error('Prediction error:', err);

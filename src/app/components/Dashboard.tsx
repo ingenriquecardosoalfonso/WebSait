@@ -2,26 +2,45 @@ import { useEffect, useState } from 'react';
 import { NetworkFlow } from '../types';
 import { generateMockDataset } from '../mockData';
 import { Legend, ResponsiveContainer, Pie, PieChart, Cell } from 'recharts';
-import { Activity, Shield, TrendingUp, Globe, CheckCircle, AlertTriangle, Sparkles } from 'lucide-react';
+import { Activity, Shield, TrendingUp, Globe, CheckCircle, AlertTriangle, Sparkles, AlertOctagon } from 'lucide-react';
 
-export default function Dashboard() {
-  const [dataset, setDataset] = useState<NetworkFlow[]>([]);
-  const [loading, setLoading] = useState(true);
+interface DashboardProps {
+  dataset: NetworkFlow[];
+  loading: boolean;
+}
 
-  useEffect(() => { generateMockDataset().then((data) => {setDataset(data); setLoading(false); });}, []);
+export default function Dashboard({ dataset, loading }: DashboardProps) {
+  //const [dataset, setDataset] = useState<NetworkFlow[]>([]);
+  //const [loading, setLoading] = useState(true);
+
+  //useEffect(() => { generateMockDataset().then((data) => {setDataset(data); setLoading(false); });}, []);
 
   const totalFlows = dataset.length;
   const maliciousFlows =  dataset.filter(f => f.Attack_grouped != 'Normal').length;
+  const lastFlow = dataset[0]; // Assuming dataset is sorted by id descending
   const maliciousPercent = ((maliciousFlows / totalFlows) * 100).toFixed(1);
-  const avgPacketRate = (dataset.reduce((sum, f) => sum + f.flow_pkts_per_sec, 0) / totalFlows).toFixed(2);
+  const avgPacketRate = (
+    dataset.reduce((sum, f) => sum + f.flow_pkts_per_sec, 0) / totalFlows
+  ).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const avgDuration = (dataset.reduce((sum, f) => sum + f.flow_duration, 0) / totalFlows).toFixed(2);
-  const networkStatus = parseFloat(maliciousPercent) < 5 ? 'Normal' : parseFloat(maliciousPercent) < 15 ? 'Warning' : 'Critical';
-  const StatusIconComponent = networkStatus === 'Normal' ? CheckCircle : AlertTriangle;
+  const lastStatus = lastFlow ? lastFlow.Attack_grouped : 'N/A';
+  const networkStatus =  //parseFloat(maliciousPercent) < 5 ? 'Normal' : parseFloat(maliciousPercent) < 15 ? 'Warning' : 'Critical';
+    lastStatus === 'Normal' ? 'Normal'
+    : lastStatus === 'NMAP' ? 'Medium'
+    : lastStatus === 'ARP_poisioning' ? 'High'
+    : lastStatus === 'DOS_SYN_Hping' ? 'Critical'
+    : 'Normal';
+  const StatusIconComponent = 
+        networkStatus === 'Normal' ? CheckCircle 
+        :networkStatus === 'Medium' ? AlertTriangle
+        :networkStatus === 'High' ? Shield
+        : AlertOctagon;
 
   // Status colors — Velocity TDIR severity system
   const statusStyles = {
     Normal:   { bg: 'rgba(76,175,110,0.08)',  border: '#4CAF6E', text: '#4CAF6E',  sub: '#3a9960' },
-    Warning:  { bg: 'rgba(232,200,64,0.08)',  border: '#E8C840', text: '#E8C840',  sub: '#c9ae35' },
+    Medium:  { bg: 'rgba(232,200,64,0.08)',  border: '#E8C840', text: '#E8C840',  sub: '#c9ae35' },
+    High:   { bg: 'rgba(232,56,58,0.08)',   border: '#fba300', text: '#fba300',  sub: '#fba300' },
     Critical: { bg: 'rgba(232,56,58,0.08)',   border: '#E8383A', text: '#E8383A',  sub: '#c42e30' },
   };
   const s = statusStyles[networkStatus];
@@ -90,15 +109,23 @@ export default function Dashboard() {
     },
   ];
 
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen" style={{ color: 'var(--vt-text-muted)' }}>
+        <div className="text-center space-y-3">
+          <div className="w-8 h-8 border-2 rounded-full animate-spin mx-auto"
+            style={{ borderColor: 'var(--border)', borderTopColor: '#00B8CC' }} />
+          <p className="text-sm">Loading dataset...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
 
       <div>
-        <h1
-          className="text-2xl font-semibold tracking-wide text-foreground"
-        >
-          Dashboard
-        </h1>
+        <h1 className="text-3xl font-semibold tracking-wide text-foreground">Dashboard</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Network traffic analysis overview
         </p>
@@ -112,18 +139,16 @@ export default function Dashboard() {
         <StatusIconComponent className="w-10 h-10 flex-shrink-0" style={{ color: s.text }} />
         <div className="flex-1">
           <h2 className="text-xl font-semibold" style={{ color: s.text }}>
-            Network Status: {networkStatus}
+            Last Network Status: {networkStatus} - {lastStatus.replace(/_/g, ' ')}
           </h2>
           <p className="mt-0.5 text-sm" style={{ color: s.sub }}>
-            {networkStatus === 'Normal'   && 'All systems operating normally. No significant threats detected.'}
-            {networkStatus === 'Warning'  && 'Moderate threat level detected. Monitoring increased activity.'}
-            {networkStatus === 'Critical' && 'High threat level! Immediate attention required.'}
+            {networkStatus === 'Normal'   && 'Network activity is operating within normal parameters. No suspicious behavior detected.'}
+            {networkStatus === 'Medium'  && 'Suspicious scanning activity detected. Potential reconnaissance in progress - monitor closely.'}
+            {networkStatus === 'High' && 'Possible man-in-the-middle attack detected. Immediate investigation is recommended.'}
+            {networkStatus === 'Critical' && 'Critical threat detected. Network availability is at risk - respond immediately.'}
           </p>
         </div>
-        <div className="text-right flex-shrink-0">
-          <p className="text-xs" style={{ color: '#8A8A9A' }}>Malicious Traffic</p>
-          <p className="text-3xl font-semibold" style={{ color: s.text }}>{maliciousPercent}%</p>
-        </div>
+        
       </div>
 
       {/* Key Metrics */}
@@ -242,8 +267,8 @@ export default function Dashboard() {
                 </h3>
                 <p className="text-xs leading-relaxed" style={{ color: 'var(--vt-text-muted)' }}>
                   Machine learning models continuously analyze network patterns to detect anomalies.
-                  Current confidence:{' '}
-                  <span className="font-semibold" style={{ color: 'var(--vt-gold)' }}>94.7%</span>
+                  Current average accuracy:{' '}
+                  <span className="font-semibold" style={{ color: 'var(--vt-gold)' }}>99.16%</span>
                 </p>
               </div>
             </div>

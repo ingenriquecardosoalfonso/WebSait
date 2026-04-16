@@ -1,7 +1,11 @@
 import { Activity, Upload, FileSpreadsheet, Download } from 'lucide-react';
 import { useDetector, riskStyles } from '../hooks/useDetector';
 
-export default function Detector() {
+interface DetectorProps {
+  onAnalyzeComplete?: () => void;
+}
+
+export default function Detector({ onAnalyzeComplete }: DetectorProps) {
   const {
   formData, selectedModel, showExcelImport,
   successMessage, isDataOpen, fieldErrors,
@@ -10,7 +14,7 @@ export default function Detector() {
   handleInputChange, handleFileUpload,
   handleImportData, detectAttack,
   setSelectedModel, setIsDataOpen,
-} = useDetector();
+} = useDetector(onAnalyzeComplete);
 
 const currentRiskStyle = prediction ? riskStyles[prediction.riskLevel] : null;
 const RiskIcon = currentRiskStyle?.icon;
@@ -34,7 +38,7 @@ const formatPrediction = (type: string) => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-wide text-foreground">
+        <h1 className="text-3xl font-semibold tracking-wide text-foreground">
           AI Detector
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">

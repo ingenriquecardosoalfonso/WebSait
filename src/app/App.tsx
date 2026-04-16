@@ -1,5 +1,3 @@
-import logo from '../assets/logo.png';
-import logomark from '../assets/logomark.png';
 import { useState, useEffect } from "react";
 import { ModuleType } from "./types";
 import { Sun, Moon } from 'lucide-react';
@@ -16,6 +14,11 @@ import Detector from "./components/Detector";
 import DataExplorer from "./components/DataExplorer";
 import Analysis from "./components/Analysis";
 import About from "./components/About";
+import { generateMockDataset } from './mockData';
+import { NetworkFlow } from './types';
+
+const logo = '/logo.png';
+const logomark = '/logomark.png';
 
 const MODULES = [
   { id: "DASHBOARD" as ModuleType, name: "Home",          icon: LayoutGrid },
@@ -39,16 +42,43 @@ export default function App() {
     }
   }, [isDark]);
 
+  const [dataset, setDataset] = useState<NetworkFlow[]>([]);
+  const [loadingDataset, setLoadingDataset] = useState(true);
+
+  // Carga inicial — solo una vez
+  useEffect(() => {
+    generateMockDataset().then((data) => {
+      setDataset(data);
+      setLoadingDataset(false);
+    });
+  }, []); // ← array vacío = solo al montar App
+
+  const refreshDataset = () => {
+    setLoadingDataset(true);
+    generateMockDataset().then((data) => {
+      setDataset(data);
+      setLoadingDataset(false);
+    });
+  };
+
   const renderModule = () => {
     switch (activeModule) {
-      case "DASHBOARD":    return <Dashboard />;
-      case "DETECTOR":     return <Detector />;
-      case "DATA_EXPLORER": return <DataExplorer />;
-      case "ANALYSIS":     return <Analysis />;
-      case "ABOUT":        return <About />;
-      default:             return <Dashboard />;
+      case "DASHBOARD":
+        return <Dashboard dataset={dataset} loading={loadingDataset} />;
+      case "DATA_EXPLORER":
+        return <DataExplorer dataset={dataset} loading={loadingDataset} />;
+      case "ANALYSIS":
+        return <Analysis dataset={dataset} loading={loadingDataset} />;
+      case "DETECTOR":
+        return <Detector onAnalyzeComplete={refreshDataset} />;
+      case "ABOUT":
+        return <About />;
+      default:
+        return <Dashboard dataset={dataset} loading={loadingDataset} />;
     }
   };
+
+  
 
   const [isCollapsed, setIsCollapsed] = useState(false);
 

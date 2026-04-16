@@ -3,16 +3,21 @@ import { NetworkFlow } from '../types';
 import { generateMockDataset } from '../mockData';
 import { XAxis, YAxis, CartesianGrid, Legend, ResponsiveContainer, BarChart, Bar, Cell, LabelList } from 'recharts';
 
-export default function Analysis() {
-  const [dataset, setDataset] = useState<NetworkFlow[]>([]);
-  const [loading, setLoading] = useState(true);
+interface DataExplorerProps {
+  dataset: NetworkFlow[];
+  loading: boolean;
+}
 
-  useEffect(() => {
+export default function Analysis({ dataset, loading }: DataExplorerProps) {
+  //const [dataset, setDataset] = useState<NetworkFlow[]>([]);
+  //const [loading, setLoading] = useState(true);
+
+  /* useEffect(() => {
     generateMockDataset().then((data) => {
       setDataset(data);
       setLoading(false);
     });
-  }, []);
+  }, []); */
   
   const attackTypeData = useMemo(() => {
     if (dataset.length === 0) return [];
@@ -177,10 +182,22 @@ export default function Analysis() {
     'Unidentified': '#0a330c'
   };
   
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen" style={{ color: 'var(--vt-text-muted)' }}>
+        <div className="text-center space-y-3">
+          <div className="w-8 h-8 border-2 rounded-full animate-spin mx-auto"
+            style={{ borderColor: 'var(--border)', borderTopColor: '#00B8CC' }} />
+          <p className="text-sm">Loading dataset...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-wide text-foreground">Comparative Analysis</h1>
+        <h1 className="text-3xl font-semibold tracking-wide text-foreground">Comparative Analysis</h1>
         <p className="mt-1 text-sm text-muted-foreground">Comparison between normal and malicious traffic</p>
       </div>      
       

@@ -5,16 +5,21 @@ import { Search, Download, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const ITEMS_PER_PAGE = 20;
 
-export default function DataExplorer() {
-  const [dataset, setDataset] = useState<NetworkFlow[]>([]);
-  const [loading, setLoading] = useState(true);
+interface DataExplorerProps {
+  dataset: NetworkFlow[];
+  loading: boolean;
+}
+
+export default function DataExplorer({ dataset, loading }: DataExplorerProps) {
+  //const [dataset, setDataset] = useState<NetworkFlow[]>([]);
+  //const [loading, setLoading] = useState(true);
   
-    useEffect(() => {
+  /*   useEffect(() => {
       generateMockDataset().then((data) => {
         setDataset(data);
         setLoading(false);
       });
-    }, []);
+    }, []); */
   const [currentPage, setCurrentPage] = useState(1);
   const [filters, setFilters] = useState({
     proto: 'all',
@@ -54,11 +59,19 @@ export default function DataExplorer() {
   const stats = useMemo(() => {
     if (filteredData.length === 0) return null;
 
+    const len = filteredData.length;
+
     return {
-      totalFlows: filteredData.length,
-      avgDuration: (filteredData.reduce((sum, f) => sum + f.flow_duration, 0) / filteredData.length).toFixed(2),
-      avgPackets: (filteredData.reduce((sum, f) => sum + (f.fwd_pkts_tot + f.bwd_pkts_tot), 0) / filteredData.length).toFixed(2),
-      avgPayload: (filteredData.reduce((sum, f) => sum + f.payload_bytes_per_second, 0) / filteredData.length).toFixed(2),
+      totalFlows: len.toLocaleString('en-US'),
+      avgDuration: (
+        filteredData.reduce((sum, f) => sum + f.flow_duration, 0) / len
+      ).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+      avgPackets: (
+        filteredData.reduce((sum, f) => sum + (f.fwd_pkts_tot + f.bwd_pkts_tot), 0) / len
+      ).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+      avgPayload: (
+        filteredData.reduce((sum, f) => sum + f.payload_bytes_per_second, 0) / len
+      ).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
     };
   }, [filteredData]);
 
@@ -84,11 +97,23 @@ export default function DataExplorer() {
     color: 'var(--foreground)',
   };
 
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen" style={{ color: 'var(--vt-text-muted)' }}>
+        <div className="text-center space-y-3">
+          <div className="w-8 h-8 border-2 rounded-full animate-spin mx-auto"
+            style={{ borderColor: 'var(--border)', borderTopColor: '#00B8CC' }} />
+          <p className="text-sm">Loading dataset...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-semibold tracking-wide text-foreground">
+          <h1 className="text-3xl font-semibold tracking-wide text-foreground">
             Data Explorer
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -293,7 +318,7 @@ export default function DataExplorer() {
                     {flow.service}
                   </td>
                   <td className="px-4 py-3 text-sm" style={{ color: 'var(--foreground)' }}>
-                    {flow.flow_duration.toFixed(2)}s
+                    {flow.flow_duration.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}s
                   </td>
                   <td className="px-4 py-3 text-sm" style={{ color: 'var(--foreground)' }}>
                     {flow.fwd_pkts_tot}
@@ -302,23 +327,35 @@ export default function DataExplorer() {
                     {flow.bwd_pkts_tot}
                   </td>
                   <td className="px-4 py-3 text-sm" style={{ color: 'var(--foreground)' }}>
-                    {flow.flow_pkts_per_sec.toFixed(2)}
+                    {flow.flow_pkts_per_sec.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
                   <td className="px-4 py-3 text-sm">
                     <span
                       className="px-2 py-1 rounded text-xs font-semibold"
                       style={
-                        flow.Attack_grouped === 'Normal'
+                        flow.Attack_grouped === 'DOS_SYN_Hping'
                           ? {
                               backgroundColor: 'rgba(76,175,110,0.08)',
-                              color: '#4CAF6E',
-                              border: '0.5px solid #4CAF6E',
-                            }
-                          : {
-                              backgroundColor: 'rgba(232,56,58,0.08)',
                               color: '#E8383A',
                               border: '0.5px solid #E8383A',
                             }
+                        :flow.Attack_grouped === 'ARP_poisioning'
+                          ? {
+                              backgroundColor: 'rgba(76,175,110,0.08)',
+                              color: '#fba300',
+                              border: '0.5px solid #fba300',
+                            }
+                        :flow.Attack_grouped === 'NMAP'
+                          ? {
+                              backgroundColor: 'rgba(76,175,110,0.08)',
+                              color: '#E8C840',
+                              border: '0.5px solid #E8C840',
+                            }
+                        :{
+                            backgroundColor: 'rgba(76,175,110,0.08)',
+                            color: '#4CAF6E',
+                            border: '0.5px solid #4CAF6E',
+                          }
                       }
                     >
                       {flow.Attack_grouped}
