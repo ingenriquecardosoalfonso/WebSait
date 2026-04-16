@@ -1,7 +1,11 @@
 import { Activity, Upload, FileSpreadsheet, Download } from 'lucide-react';
 import { useDetector, riskStyles } from '../hooks/useDetector';
 
-export default function Detector() {
+interface DetectorProps {
+  onAnalyzeComplete?: () => void;
+}
+
+export default function Detector({ onAnalyzeComplete }: DetectorProps) {
   const {
   formData, selectedModel, showExcelImport,
   successMessage, isDataOpen, fieldErrors,
@@ -10,7 +14,7 @@ export default function Detector() {
   handleInputChange, handleFileUpload,
   handleImportData, detectAttack,
   setSelectedModel, setIsDataOpen,
-} = useDetector();
+} = useDetector(onAnalyzeComplete);
 
 const currentRiskStyle = prediction ? riskStyles[prediction.riskLevel] : null;
 const RiskIcon = currentRiskStyle?.icon;
@@ -34,7 +38,7 @@ const formatPrediction = (type: string) => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-wide text-foreground">
+        <h1 className="text-3xl font-semibold tracking-wide text-foreground">
           AI Detector
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -1041,6 +1045,7 @@ const formatPrediction = (type: string) => {
           {prediction ? (
             <div className="space-y-6">
               <div className="text-center py-8" style={{ borderBottom: '0.5px solid var(--border)' }}>
+                
                 <div className="flex justify-center mb-4">
                   {RiskIcon && <RiskIcon className="w-16 h-16" style={{ color: currentRiskStyle?.text }} />}
                 </div>
@@ -1048,11 +1053,9 @@ const formatPrediction = (type: string) => {
                 <h3 className="text-2xl font-semibold mb-2" style={{ color: 'var(--foreground)' }}>
                   {formatPrediction(prediction.type)}
                 </h3>
-
                 <p className="text-xs mb-3" style={{ color: 'var(--vt-text-muted)' }}>
                   Analyzed by {ML_MODELS.find(m => m.value === prediction.modelUsed)?.label ?? prediction.modelUsed}
                 </p>
-
                 <span
                   className="inline-block px-4 py-2 rounded-lg text-sm font-semibold"
                   style={{
@@ -1097,15 +1100,30 @@ const formatPrediction = (type: string) => {
                   <div className="space-y-2">
                     {prediction.shapFeatures.map((f, idx) => {
                       const isPositive = f.shap_value > 0;
-                      const cleanName = f.feature.replace('num__', '').replace('cat__', '');
+                      const cleanName = `${f.feature_name}`;
+                      const cleanDescription = `${f.description}\n${isPositive ? 'positive: ' + f.description_positive : 'negative: ' + f.description_negative}`;
+                      const tooltipText = `${cleanName}`;
+
                       return (
-                        <div key={idx} className="flex justify-between items-center p-3 rounded-lg"
-                          style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '0.5px solid var(--border)' }}>
-                          <span className="text-sm font-mono" style={{ color: 'var(--foreground)' }}>
+                        <div className="flex items-start gap-2" style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '0.5px solid var(--border)' }}
+                        >
+                        <div
+                          key={idx}
+                          title={tooltipText}
+                          className="flex flex-col p-3 rounded-lg cursor-help"
+                        >
+                          <span className="text-sm font-mono" style={{ color: 'var(--foreground)', whiteSpace: 'pre-line' }}
+                          >
                             {cleanName}
                           </span>
-                          <span className="text-sm font-semibold"
-                            style={{ color: isPositive ? '#E8383A' : '#4CAF6E' }}>
+                          <span className="text-sm font-mono" style={{ color: 'var(--vt-text-muted)' }}
+                          >
+                            {cleanDescription}
+                          </span>
+                        </div>
+                          <span className="text-sm font-semibold self-start"
+                            style={{ color: isPositive ? '#4CAF6E' : '#E8383A' }}
+                          >
                             {isPositive ? '+' : ''}{f.shap_value.toFixed(4)}
                           </span>
                         </div>

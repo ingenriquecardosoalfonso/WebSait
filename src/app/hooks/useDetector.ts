@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { predictFlow } from '../../services/predictionService';
-import { CheckCircle, AlertTriangle, Shield } from 'lucide-react';
+import { CheckCircle, AlertTriangle, Shield, AlertOctagon } from 'lucide-react';
 
 const PROTOCOLS = ['tcp', 'udp', 'icmp'];
 const ML_MODELS = [
@@ -60,13 +60,19 @@ export const riskStyles = {
   },
   high: {
     bg:     'rgba(232,56,58,0.08)',
+    border: '#fba300',
+    text:   '#fba300',
+    icon:   Shield,
+  },
+  critical: {
+    bg:     'rgba(232,56,58,0.08)',
     border: '#E8383A',
     text:   '#E8383A',
-    icon:   Shield,
+    icon:   AlertOctagon,
   },
 };
 
-export function useDetector() {
+export function useDetector(onAnalyzeComplete?: () => void) {
   const [formData, setFormData]               = useState<FormDataType>(createInitialFormData());
   const [selectedModel, setSelectedModel]     = useState('random_forest');
   const [excelData, setExcelData]             = useState('');
@@ -80,9 +86,19 @@ export function useDetector() {
   const [prediction, setPrediction] = useState<{
     type:          string;
     confidence:    number;
-    riskLevel:     'low' | 'medium' | 'high';
+    riskLevel:     'low' | 'medium' | 'high' | 'critical';
     probabilities: Record<string, number> | null;
-    shapFeatures:  { feature: string; shap_value: number }[];
+    shapFeatures: {
+        feature: string;
+        feature_name: string;
+        description: string;
+        description_negative: string;
+        description_positive: string;
+        predicted_class: string;
+        shap_value: number;
+        state: boolean;
+      }[];
+    modelUsed: string;
   } | null>(null);
 
   // ── Input change ────────────────────────────────────────────
@@ -241,18 +257,16 @@ export function useDetector() {
       };
 
       const response = await predictFlow(payload);
-      console.log('API response:', response);
-      console.log('shap_features:', response.shap_features); 
       setPrediction({
         type:          response.prediction,
         confidence:    response.confidence,
-        riskLevel: response.risk_level.toLowerCase() === 'critical' ? 'high' 
-         : response.risk_level.toLowerCase() as 'low' | 'medium' | 'high',
+        riskLevel: response.risk_level.toLowerCase() as 'low' | 'medium' | 'high' | 'critical',
         probabilities: response.probabilities ?? null,
         shapFeatures:  response.shap_features ?? [],
         modelUsed:     response.model,
       });
       window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (onAnalyzeComplete) onAnalyzeComplete(); 
 
     } catch (err) {
       console.error('Prediction error:', err);

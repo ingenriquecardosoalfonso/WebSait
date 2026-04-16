@@ -1,47 +1,92 @@
 import { useEffect, useState } from 'react';
 import { NetworkFlow } from '../types';
 import { generateMockDataset } from '../mockData';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Activity, Shield, TrendingUp, Globe, CheckCircle, AlertTriangle, Sparkles } from 'lucide-react';
+import { Legend, ResponsiveContainer, Pie, PieChart, Cell } from 'recharts';
+import { Activity, Shield, TrendingUp, Globe, CheckCircle, AlertTriangle, Sparkles, AlertOctagon } from 'lucide-react';
 
-export default function Dashboard() {
-  const [dataset, setDataset] = useState<NetworkFlow[]>([]);
-  const [loading, setLoading] = useState(true);
+interface DashboardProps {
+  dataset: NetworkFlow[];
+  loading: boolean;
+}
 
-  useEffect(() => { generateMockDataset().then((data) => {setDataset(data); setLoading(false); });}, []);
+export default function Dashboard({ dataset, loading }: DashboardProps) {
+  //const [dataset, setDataset] = useState<NetworkFlow[]>([]);
+  //const [loading, setLoading] = useState(true);
+
+  //useEffect(() => { generateMockDataset().then((data) => {setDataset(data); setLoading(false); });}, []);
 
   const totalFlows = dataset.length;
   const maliciousFlows =  dataset.filter(f => f.Attack_grouped != 'Normal').length;
+  const lastFlow = dataset[0]; // Assuming dataset is sorted by id descending
   const maliciousPercent = ((maliciousFlows / totalFlows) * 100).toFixed(1);
-  const suma = dataset.reduce((sum, f) => sum + (Number(f.flow_pkts_per_sec) || 0), 0);
-  const avgPacketRate = (dataset.reduce((sum, f) => sum + f.flow_pkts_per_sec, 0) / totalFlows).toFixed(2);
+  const avgPacketRate = (
+    dataset.reduce((sum, f) => sum + f.flow_pkts_per_sec, 0) / totalFlows
+  ).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const avgDuration = (dataset.reduce((sum, f) => sum + f.flow_duration, 0) / totalFlows).toFixed(2);
-  const networkStatus = parseFloat(maliciousPercent) < 5 ? 'Normal' : parseFloat(maliciousPercent) < 15 ? 'Warning' : 'Critical';
-  const StatusIconComponent = networkStatus === 'Normal' ? CheckCircle : AlertTriangle;
+  const lastStatus = lastFlow ? lastFlow.Attack_grouped : 'N/A';
+  const networkStatus =  //parseFloat(maliciousPercent) < 5 ? 'Normal' : parseFloat(maliciousPercent) < 15 ? 'Warning' : 'Critical';
+    lastStatus === 'Normal' ? 'Normal'
+    : lastStatus === 'NMAP' ? 'Medium'
+    : lastStatus === 'ARP_poisioning' ? 'High'
+    : lastStatus === 'DOS_SYN_Hping' ? 'Critical'
+    : 'Normal';
+  const StatusIconComponent = 
+        networkStatus === 'Normal' ? CheckCircle 
+        :networkStatus === 'Medium' ? AlertTriangle
+        :networkStatus === 'High' ? Shield
+        : AlertOctagon;
 
   // Status colors — Velocity TDIR severity system
   const statusStyles = {
     Normal:   { bg: 'rgba(76,175,110,0.08)',  border: '#4CAF6E', text: '#4CAF6E',  sub: '#3a9960' },
-    Warning:  { bg: 'rgba(232,200,64,0.08)',  border: '#E8C840', text: '#E8C840',  sub: '#c9ae35' },
+    Medium:  { bg: 'rgba(232,200,64,0.08)',  border: '#E8C840', text: '#E8C840',  sub: '#c9ae35' },
+    High:   { bg: 'rgba(232,56,58,0.08)',   border: '#fba300', text: '#fba300',  sub: '#fba300' },
     Critical: { bg: 'rgba(232,56,58,0.08)',   border: '#E8383A', text: '#E8383A',  sub: '#c42e30' },
   };
   const s = statusStyles[networkStatus];
 
-  const timeSeriesData = dataset
-    .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
-    .reduce((acc: any[], flow, idx) => {
-      if (idx % 50 === 0) {
-        const maliciousCount = dataset.slice(Math.max(0, idx - 100), idx + 1).filter(f => f.Attack_grouped !== 'Normal').length;
-        const totalCount = Math.min(100, idx + 1);
-        acc.push({
-          time: flow.timestamp.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-          packets: flow.flow_pkts_per_sec,
-          bytes: flow.payload_bytes_per_second,
-          status: (maliciousCount / totalCount) * 100,
-        });
-      }
-      return acc;
-    }, []);
+  const totalRecords = dataset.length;
+
+  const counts = dataset.reduce((acc: { [key: string]: number }, flow) => {
+    const type = flow.Attack_grouped;
+    acc[type] = (acc[type] || 0) + 1;
+    return acc;
+  }, {});
+
+  const data = Object.entries(counts).map(([name, count]) => {
+    const colorMap: { [key: string]: string } = {
+      'Normal': '#00B8CC',
+      'DOS_SYN_Hping': '#E67E22',
+      'ARP_poisioning': '#1A5276',
+      'NMAP': '#1D8348'
+    };
+
+    return {
+      name: name,
+      value: parseFloat(((count as number / totalRecords) * 100).toFixed(2)),
+      color: colorMap[name] || '#8884d8'
+    };
+  }).sort((a, b) => b.value - a.value);
+
+  const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+    const x = cx + radius * Math.cos(-midAngle * (Math.PI / 180));
+    const y = cy + radius * Math.sin(-midAngle * (Math.PI / 180));
+
+    return (
+      <text 
+        x={x} 
+        y={y} 
+        fill="white" 
+        textAnchor="middle" 
+        dominantBaseline="central"
+        fontSize={12}
+        fontWeight="bold"
+      >
+        {`${(percent * 100).toFixed(2)}%`}
+      </text>
+    );
+  };
 
   const recommendations = [
     {
@@ -64,16 +109,23 @@ export default function Dashboard() {
     },
   ];
 
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen" style={{ color: 'var(--vt-text-muted)' }}>
+        <div className="text-center space-y-3">
+          <div className="w-8 h-8 border-2 rounded-full animate-spin mx-auto"
+            style={{ borderColor: 'var(--border)', borderTopColor: '#00B8CC' }} />
+          <p className="text-sm">Loading dataset...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
 
-      {/* Header */}
       <div>
-        <h1
-          className="text-2xl font-semibold tracking-wide text-foreground"
-        >
-          Dashboard
-        </h1>
+        <h1 className="text-3xl font-semibold tracking-wide text-foreground">Dashboard</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Network traffic analysis overview
         </p>
@@ -87,18 +139,16 @@ export default function Dashboard() {
         <StatusIconComponent className="w-10 h-10 flex-shrink-0" style={{ color: s.text }} />
         <div className="flex-1">
           <h2 className="text-xl font-semibold" style={{ color: s.text }}>
-            Network Status: {networkStatus}
+            Last Network Status: {networkStatus} - {lastStatus.replace(/_/g, ' ')}
           </h2>
           <p className="mt-0.5 text-sm" style={{ color: s.sub }}>
-            {networkStatus === 'Normal'   && 'All systems operating normally. No significant threats detected.'}
-            {networkStatus === 'Warning'  && 'Moderate threat level detected. Monitoring increased activity.'}
-            {networkStatus === 'Critical' && 'High threat level! Immediate attention required.'}
+            {networkStatus === 'Normal'   && 'Network activity is operating within normal parameters. No suspicious behavior detected.'}
+            {networkStatus === 'Medium'  && 'Suspicious scanning activity detected. Potential reconnaissance in progress - monitor closely.'}
+            {networkStatus === 'High' && 'Possible man-in-the-middle attack detected. Immediate investigation is recommended.'}
+            {networkStatus === 'Critical' && 'Critical threat detected. Network availability is at risk - respond immediately.'}
           </p>
         </div>
-        <div className="text-right flex-shrink-0">
-          <p className="text-xs" style={{ color: '#8A8A9A' }}>Malicious Traffic</p>
-          <p className="text-3xl font-semibold" style={{ color: s.text }}>{maliciousPercent}%</p>
-        </div>
+        
       </div>
 
       {/* Key Metrics */}
@@ -140,29 +190,34 @@ export default function Dashboard() {
             className="text-xs font-medium tracking-widest uppercase mb-4"
             style={{ color: '#8A8A9A' }}
           >
-            Traffic Over Time
+            Traffic Class Distribution
           </h2>
           <ResponsiveContainer width="100%" height={420}>
-            <LineChart data={timeSeriesData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#2A2A35" />
-              <XAxis dataKey="time" stroke="#4A4A5A" tick={{ fill: '#8A8A9A', fontSize: 11 }} />
-              <YAxis yAxisId="left"   stroke="#4A4A5A" tick={{ fill: '#8A8A9A', fontSize: 11 }} />
-              <YAxis yAxisId="right"  stroke="#4A4A5A" tick={{ fill: '#8A8A9A', fontSize: 11 }} orientation="right" />
-              <YAxis yAxisId="status" orientation="right" domain={[0, 100]} hide />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'var(--card)',
-                  border: '0.5px solid var(--border)',
-                  borderRadius: '4px',
-                  color: '#C8CDD8',
-                  fontSize: 12,
-                }}
+            <PieChart>
+              <Pie
+                data={data}
+                cx="50%"
+                cy="50%"
+                labelLine={false} 
+                label={renderCustomizedLabel} 
+                innerRadius={0} 
+                outerRadius={140}
+                paddingAngle={2}
+                dataKey="value"
+                stroke="var(--card)"
+                strokeWidth={2}
+              >
+                {data.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Legend 
+                layout="vertical" 
+                align="right" 
+                verticalAlign="middle"
+                wrapperStyle={{ color: '#8A8A9A', fontSize: 12, paddingLeft: '20px' }} 
               />
-              <Legend wrapperStyle={{ color: '#8A8A9A', fontSize: 12 }} />
-              <Line yAxisId="left"   type="monotone" dataKey="packets" stroke="#00B8CC" name="Packets/s"      strokeWidth={1.5} dot={false} />
-              <Line yAxisId="right"  type="monotone" dataKey="bytes"   stroke="#4CAF6E" name="Bytes/s"        strokeWidth={1.5} dot={false} />
-              <Line yAxisId="status" type="monotone" dataKey="status"  stroke="#E8383A" name="Threat Level %" strokeWidth={1.5} dot={false} />
-            </LineChart>
+            </PieChart>
           </ResponsiveContainer>
         </div>
 
@@ -212,8 +267,8 @@ export default function Dashboard() {
                 </h3>
                 <p className="text-xs leading-relaxed" style={{ color: 'var(--vt-text-muted)' }}>
                   Machine learning models continuously analyze network patterns to detect anomalies.
-                  Current confidence:{' '}
-                  <span className="font-semibold" style={{ color: 'var(--vt-gold)' }}>94.7%</span>
+                  Current average accuracy:{' '}
+                  <span className="font-semibold" style={{ color: 'var(--vt-gold)' }}>99.16%</span>
                 </p>
               </div>
             </div>
