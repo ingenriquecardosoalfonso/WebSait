@@ -25,7 +25,7 @@ export default function LiveMonitor() {
 
   // Cargar datos reales de la API al montar
   useEffect(() => {
-  apiFetch('/api/network-flows/').then((data: NetworkFlow[]) => {
+  apiFetch('network-flows/').then((data: NetworkFlow[]) => {
     realFlowsRef.current = data;
     setLoadingData(false);
   });
