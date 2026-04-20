@@ -21,7 +21,7 @@ export function generateMockFlow(row: NetworkFlow): NetworkFlow {
 }
 
 export async function generateMockDataset(): Promise<NetworkFlow[]> {
-  const dataflow = await apiFetch('/network-flows/');
+  const dataflow = await apiFetch('/api/network-flows/');
   const dataset = (dataflow as NetworkFlow[]).map((row) => generateMockFlow(row));
   return dataset.sort((a, b) => {
     const numA = parseInt(a.id.replace('flow-', ''));
